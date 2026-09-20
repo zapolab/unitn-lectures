@@ -1,0 +1,13 @@
+version: '3.8'
+
+services:
+  workspace:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ..:/workspace:cached
+    command: sleep infinity
+    env_file: .env
+    ports:
+      - "3000:3000"
