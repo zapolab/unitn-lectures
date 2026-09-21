@@ -254,14 +254,29 @@ Wheeled robots use three types of wheels:
 - The Ackerman steering can be generalised to the case of trailers.
 
 #figure(
-  block(width: 100%, height: 60pt)[
-    #place(dx: 14pt, dy: 40pt, line(angle: 0deg, length: 78pt, stroke: 1pt + primary))
-    #place(dx: 12pt, dy: 33pt, rect(width: 30pt, height: 7pt, radius: 1pt, fill: primary))
-    #place(dx: 64pt, dy: 33pt, rect(width: 30pt, height: 7pt, radius: 1pt, fill: primary))
-    #place(dx: 18pt, dy: 12pt, rotate(-22deg, rect(width: 26pt, height: 7pt, radius: 1pt, fill: accent)))
-    #place(dx: 64pt, dy: 12pt, rotate(22deg, rect(width: 26pt, height: 7pt, radius: 1pt, fill: accent)))
-    #place(dx: 104pt, dy: 37pt, circle(radius: 2.5pt, fill: defcol))
-    #place(dx: 108pt, dy: 34pt, text(size: 5.6pt, fill: muted)[centre of turning circle])
+  block(width: 100%, height: 76pt)[
+    // centre of turning circle (on the rear-axle line, toward the turn)
+    #place(dx: 13pt, dy: 49pt, circle(radius: 3pt, fill: defcol))
+    // radii (perpendicular to the wheels) converge on the centre
+    #place(dx: 16pt, dy: 52pt, line(angle: -31.3deg, length: 65.5pt,
+      stroke: (paint: accent, thickness: 0.5pt, dash: "dashed")))
+    #place(dx: 16pt, dy: 52pt, line(angle: -13.3deg, length: 148pt,
+      stroke: (paint: accent, thickness: 0.5pt, dash: "dashed")))
+    // chassis side rails
+    #place(dx: 72pt, dy: 18pt, line(angle: 90deg, length: 34pt, stroke: 0.5pt + rule))
+    #place(dx: 160pt, dy: 18pt, line(angle: 90deg, length: 34pt, stroke: 0.5pt + rule))
+    // rear axle and fixed rear wheels (rolling direction = forward/up)
+    #place(dx: 72pt, dy: 52pt, line(angle: 0deg, length: 88pt, stroke: 1pt + primary))
+    #place(dx: 69pt, dy: 41pt, rect(width: 6pt, height: 22pt, radius: 1pt, fill: primary))
+    #place(dx: 157pt, dy: 41pt, rect(width: 6pt, height: 22pt, radius: 1pt, fill: primary))
+    // front wheels: perpendicular to their radius; internal turns more than external
+    #place(dx: 69pt, dy: 7pt, rotate(-30deg, origin: center,
+      rect(width: 6pt, height: 22pt, radius: 1pt, fill: accent)))
+    #place(dx: 157pt, dy: 7pt, rotate(-13deg, origin: center,
+      rect(width: 6pt, height: 22pt, radius: 1pt, fill: accent)))
+    #place(dx: 0pt, dy: 58pt, text(size: 5.6pt, fill: muted)[centre of turning circle])
+    #place(dx: 104pt, dy: 0pt, text(size: 5.6pt, fill: muted)[front wheels (steered)])
+    #place(dx: 118pt, dy: 58pt, text(size: 5.6pt, fill: muted)[rear wheels (fixed)])
   ],
   caption: [Ackerman steering: the two front wheels follow the same circular trajectory (the internal wheel turns more than the external one).],
 )
