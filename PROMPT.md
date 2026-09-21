@@ -54,8 +54,11 @@ occupa molte slide: la densità va valutata sulle sole slide di contenuto (vedi 
 - Posizioni:
   - il file `.typ` e tutti gli artefatti (`fig/`, `build/`, `_estrazione.md`,
     `_mappa_concetti.md`) vanno nella stessa directory del PDF di partenza, cioè
-    `lectures/<nome-corso>/source/<numero-lezione>/`;
-  - il PDF compilato va salvato in `lectures/<nome-corso>/<nome-corso>-<numero-lezione>.pdf`.
+    `lectures/<nome-corso>/source/<numero-lezione>/`; `build/` serve solo per artefatti
+    temporanei (render/ritagli), NON per l'output compilato;
+  - il PDF compilato va generato DIRETTAMENTE in
+    `lectures/<nome-corso>/<nome-corso>-<numero-lezione>.pdf` (nessun passaggio
+    intermedio in `build/`, nessuna copia successiva).
 - NON modificare, spostare o cancellare il PDF originale.
 
 ---
@@ -376,11 +379,11 @@ Come evitare gli spezzoni (leggibilità):
 
 # FASE 5 — COMPILAZIONE E VERIFICA
 
-1. Dalla directory della lezione (`lectures/<nome-corso>/source/<numero-lezione>/`):
-   `typst compile <nome-corso>-<numero-lezione>.typ build/<nome-corso>-<numero-lezione>.pdf`
-   poi copia il PDF compilato in
-   `lectures/<nome-corso>/<nome-corso>-<numero-lezione>.pdf`
-   (aggiungi `--font-path ./fonts` se hai font locali). Itera finché: **zero errori e
+1. Dalla directory della lezione (`lectures/<nome-corso>/source/<numero-lezione>/`),
+   compila direttamente nella directory del corso:
+   `typst compile <nome-corso>-<numero-lezione>.typ ../../<nome-corso>-<numero-lezione>.pdf`
+   (nessun output in `build/`, nessuna copia successiva;
+   aggiungi `--font-path ./fonts` se hai font locali). Itera finché: **zero errori e
    zero warning** (in particolare warning di glifo mancante: sostituisci il carattere
    con math mode o testo).
 2. Checklist obbligatoria prima di dichiarare finito:
