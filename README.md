@@ -1,4 +1,4 @@
-# Unitn Lectures
+# UniTN Lectures
 
 This repository contains AI-generated summaries of the courses I follow at the University of Trento.
 
