@@ -1,0 +1,41 @@
+# Mappa concetti (uso interno) — PARCO-01
+
+Formato: concetto | dove appare (pagina interna) | sezione/ancora | stato
+
+- Supercomputers (Top500) | 30 | sec-supercomputers | completo
+- FLOPs scale / exascale | 31 | sec-flops | completo
+- Domini applicativi HPC | 32, 82 | sec-domains | completo
+- Anatomy: node = server, CPU+GPU | 33 | sec-anatomy | completo
+- Inside the node (CPU/Memory/GPU/NIC) | 34 | sec-node | completo
+- Node -> rack | 35 | sec-rack | completo
+- Racks -> topology | 36 | sec-topology | completo
+- Fully stacked system | 37 | sec-stack | completo
+- Domande del corso | 38 | sec-questions | completo
+- Topic del corso | 39 | sec-topics | completo
+- What this course is about / co-design | 40, 41 | sec-codesign | completo
+- Serial computing | 43 | sec-serial | completo
+- E-commerce logistics example | 44-49 | sec-logistics | completo
+- Fact parallel computing | 50 | sec-logistics | completo
+- Possible solutions (clock, vectorization, more PE) | 51-53 | sec-solutions | completo
+- Transistor scaling / Dennard | 54-56 | sec-dennard | completo
+- Moore's law + perf/watt | 57 | sec-moore | completo
+- Why not clock frequency / more cores | 58-59 | sec-clock | completo
+- Single vs multi-core design constraint | 60 | sec-design | completo
+- HW/SW perspective | 62, 63 | sec-hwsw | completo
+- Definizione Parallel Computing | 64, 65 | sec-defpc | completo
+- Sequential -> parallel algorithms | 67 | sec-seqpar | completo
+- Pasta carbonara (indip/dip, concurrency) | 68-73 | sec-pasta | completo
+- Task vs Data parallelism, scalability | 74, 75 | sec-taskdata | completo
+- Data/task decomposition | 76 | sec-decomp | completo
+- Concurrency vs parallelism | 77 | sec-concpar | completo
+- Amdahl's law (idea) | 78 | sec-amdahl | completo
+- Amdahl model / upper bound | 79 | sec-amdahl-model | completo
+- Amdahl worked example | 80, 81 | sec-amdahl-example | completo
+- Pipeline observations->code | 83 | sec-pipeline | completo
+- Climate | 84 | sec-climate | completo
+- CFD | 85, 86 | sec-cfd | completo
+- Modern parallel architectures | 88, 89, 90, 91 | sec-arch | completo
+- Abstract parallel machine | 92, 93 | sec-abstract | completo
+- Performance measure/metrics | 95 | sec-perf | completo
+- Portability / perf-portability / productivity | 96 | sec-portability | completo
+- Takeaway | 98 | sec-takeaway | completo
