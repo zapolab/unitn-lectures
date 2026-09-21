@@ -7,7 +7,10 @@ services:
       dockerfile: Dockerfile
     volumes:
       - ..:/workspace:cached
+      - ./entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
+    entrypoint: ["/usr/local/bin/entrypoint.sh"]
     command: sleep infinity
     env_file: .env
     ports:
       - "3000:3000"
+    restart: unless-stopped

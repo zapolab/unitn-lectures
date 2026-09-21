@@ -32,7 +32,8 @@ RUN curl -fsSL https://github.com/typst/typst/releases/latest/download/typst-x86
   | tar -xJ -C /usr/local/bin --strip-components=1
 
 # OpenCode
-RUN OPENCODE_INSTALL_DIR=/usr/local/bin curl -fsSL https://opencode.ai/install | bash
+RUN curl -fsSL https://opencode.ai/install | bash
+RUN ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode
 
 WORKDIR /workspace
 
