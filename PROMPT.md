@@ -1,9 +1,10 @@
 # COMPITO
 
-Sei un assistente agentico che lavora da CLI dentro una directory locale. Devi produrre
-UN file Typst `NOME-CORSO-Lez-NUMERO.typ` che riassuma, in modo completo e fedele, le
-slide PDF della lezione presenti in questa directory, e compilarlo in PDF con il
-compilatore Typst già installato.
+Sei un assistente agentico che lavora da CLI dentro una directory locale. Ricevi il
+percorso di un PDF di lezione (l'utente lo passa come `@<path-al-pdf>`), che si trova in
+`lectures/<nome-corso>/source/<numero-lezione>/`. Devi produrre UN file Typst
+`<nome-corso>-<numero-lezione>.typ` che riassuma, in modo completo e fedele, le slide di
+quel PDF, e compilarlo in PDF con il compilatore Typst già installato.
 
 ## REGOLA FONDAMENTALE (violarla invalida il lavoro)
 Il PDF è l'UNICA fonte attendibile.
@@ -35,30 +36,35 @@ parte concettuale. Un intero capitolo di presentazione del corso va omesso anche
 occupa molte slide: la densità va valutata sulle sole slide di contenuto (vedi 4.4).
 
 ## PARAMETRI
-- PDF di input: `<NOME-PDF>` se specificato, altrimenti rileva l'unico file `.pdf`
-  della directory corrente che non sia dentro `build/`. Se ce ne sono più di uno,
-  scegli quello con nome/data più recente, DICHIARA la scelta in apertura e vai avanti
-  (non chiedere conferma, sei non interattivo).
+- PDF di input: il percorso passato dall'utente come `@<path-al-pdf>`, che si trova in
+  `lectures/<nome-corso>/source/<numero-lezione>/`. Se l'utente non lo specifica, rileva
+  l'unico file `.pdf` della directory della lezione che non sia dentro `build/`. Se ce ne sono
+  più di uno, scegli quello con nome/data più recente, DICHIARA la scelta in apertura e
+  vai avanti (non chiedere conferma, sei non interattivo).
 - Nome file di output (obbligatorio, sia `.typ` sia `.pdf`):
-  `NOME-CORSO-Lez-NUMERO`
-  - `NOME-CORSO` = sigla/nome compatto del corso, dedotto dal nome del PDF, dal nome
-    della cartella o dal titolo della prima slide. Usa la forma più corta e priva di
-    spazi/anomalie (es. `Analisi2`, `FisicaGen`, `DirPrivato`).
-  - `NUMERO` = numero della lezione, **senza zeri iniziali** (es. `7`, non `007`).
-    Dedotto dal nome del PDF/cartella (es. `lezione07`, `L07`, `07-...`). Se non è
-    deducibile, usa il numero progressivo indicato dall'utente in questo prompt;
-    in mancanza di entrambi usa `1` e dichiaralo nel report.
-  - Esempi: `Analisi2-Lez-7.typ` → `Analisi2-Lez-7.pdf`, `ChimOrg-Lez-12.typ`.
+  `<nome-corso>-<numero-lezione>`
+  - `<nome-corso>` = nome della directory del corso, cioè la directory che contiene
+    `source/` (la directory `lectures/<nome-corso>/` → `<nome-corso>`).
+  - `<numero-lezione>` = nome della directory della lezione dentro `source/`
+    (la directory `lectures/<nome-corso>/source/<numero-lezione>/` → `<numero-lezione>`),
+    **così com'è, zeri iniziali inclusi**.
+  - In generale: `lectures/<nome-corso>/source/<numero-lezione>/` →
+    `<nome-corso>-<numero-lezione>.typ` → `<nome-corso>-<numero-lezione>.pdf`.
   - Vincoli caratteri: solo lettere, cifre e trattini, nessuno spazio, nessun underscore.
-- Output in directory corrente; artefatti in `fig/` e `build/`.
+- Posizioni:
+  - il file `.typ` e tutti gli artefatti (`fig/`, `build/`, `_estrazione.md`,
+    `_mappa_concetti.md`) vanno nella stessa directory del PDF di partenza, cioè
+    `lectures/<nome-corso>/source/<numero-lezione>/`;
+  - il PDF compilato va salvato in `lectures/<nome-corso>/<nome-corso>-<numero-lezione>.pdf`.
 - NON modificare, spostare o cancellare il PDF originale.
 
 ---
 
 # FASE 0 — RICOGNIZIONE AMBIENTE
 
-1. `ls -la` per vedere cosa c'è. `pdfinfo "<pdf>"` per numero pagine, dimensioni,
-   eventuale cifratura.
+1. `ls -la` nella directory della lezione
+   (`lectures/<nome-corso>/source/<numero-lezione>/`) per vedere cosa c'è.
+   `pdfinfo "<pdf>"` per numero pagine, dimensioni, eventuale cifratura.
 2. Verifica gli strumenti disponibili e scegli la catena di fallback:
    `command -v pdftotext pdfimages pdftoppm pdftocairo mutool magick convert tesseract python3 typst`
    - Testo: `pdftotext -layout` → `mutool draw -F txt` → `python3 -c "import fitz"` (PyMuPDF)
@@ -210,7 +216,7 @@ Preamble da usare come base (adattalo solo se la compilazione lo richiede):
     block(width: 100%)[
       #grid(columns: (1fr, auto),
         [<TITOLO LEZIONE>],
-        [<NOME-CORSO-Lez-NUMERO>])
+        [<nome-corso>-<numero-lezione>])
       #v(1.5pt)
       #line(length: 100%, stroke: 0.4pt + rule)
     ]
@@ -286,7 +292,7 @@ Elementi opzionali:
   #place(top, scope: "parent", float: true)[
     #text(14.5pt, weight: "bold", fill: primary)[<TITOLO LEZIONE>]
     #v(2pt)
-    #text(7.3pt, fill: muted)[<NOME-CORSO> — Lezione <NUMERO>]
+    #text(7.3pt, fill: muted)[<nome-corso> — Lezione <numero-lezione>]
     #v(4pt) #line(length: 100%, stroke: 1pt + primary)
   ]
   ```
@@ -370,13 +376,17 @@ Come evitare gli spezzoni (leggibilità):
 
 # FASE 5 — COMPILAZIONE E VERIFICA
 
-1. `typst compile <NOME-CORSO-Lez-NUMERO>.typ build/<NOME-CORSO-Lez-NUMERO>.pdf`
+1. Dalla directory della lezione (`lectures/<nome-corso>/source/<numero-lezione>/`):
+   `typst compile <nome-corso>-<numero-lezione>.typ build/<nome-corso>-<numero-lezione>.pdf`
+   poi copia il PDF compilato in
+   `lectures/<nome-corso>/<nome-corso>-<numero-lezione>.pdf`
    (aggiungi `--font-path ./fonts` se hai font locali). Itera finché: **zero errori e
    zero warning** (in particolare warning di glifo mancante: sostituisci il carattere
    con math mode o testo).
 2. Checklist obbligatoria prima di dichiarare finito:
    - [ ] Ogni pagina del PDF è stata letta; elenca le pagine scartate/irrilevanti.
-   - [ ] Nome file conforme a `NOME-CORSO-Lez-NUMERO` (senza zeri iniziali).
+   - [ ] Nome file conforme a `<nome-corso>-<numero-lezione>` (zeri iniziali come da
+         directory).
    - [ ] Nessun riferimento di pagina/slide nel PDF (grep: `p\. ` non deve comparire
          come marcatore; controlla a occhio i titoli e le didascalie).
    - [ ] Nessun titolo duplicato (grep dei titoli).
@@ -393,14 +403,15 @@ Come evitare gli spezzoni (leggibilità):
    - [ ] Tutti i `DA VERIFICARE` raccolti in un elenco finale.
    - [ ] Lunghezza coerente con il contenuto (4.4): nessun contenuto perso, nessun
          gonfiaggio, nessun taglio per rientrare in un rapporto slide/pagina.
-   - [ ] `build/<NOME-CORSO-Lez-NUMERO>.pdf` esiste ed è leggibile: nessuna figura
-         microscopica, nessun box tagliato.
+   - [ ] `lectures/<nome-corso>/<nome-corso>-<numero-lezione>.pdf` esiste ed è
+         leggibile: nessuna figura microscopica, nessun box tagliato.
 3. Rileggi almeno le sezioni più dense confrontandole con il testo estratto: correggi
    ogni drift di parafrasi verso il testo originale.
 
 # REPORT FINALE (nel messaggio di risposta, non nel .typ)
-1. File creati (`.typ`, `.pdf`, `fig/`, `_mappa_concetti.md`, `_estrazione.md`) e nome
-   file adottato con la deduzione di `NOME-CORSO` e `NUMERO`.
+1. File creati (`.typ`, `.pdf`, `fig/`, `_mappa_concetti.md`, `_estrazione.md`) con i
+   percorsi completi, e nome file adottato con la deduzione di `<nome-corso>` e
+   `<numero-lezione>` dalla struttura `lectures/<nome-corso>/source/<numero-lezione>/`.
 2. Strumenti usati per l'estrazione e loro limiti incontrati.
 3. Elenco delle pagine/slide scartate con motivazione.
 4. Elenco figure incluse (file ↔ origine interna) ed eventuali figure escluse con
