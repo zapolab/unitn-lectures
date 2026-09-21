@@ -230,8 +230,11 @@ Preamble da usare come base (adattalo solo se la compilazione lo richiede):
          fill: ink, hyphenate: true)
 #set par(justify: true, leading: 0.55em, spacing: 0.5em, first-line-indent: 0em)
 #show raw: set text(font: "DejaVu Sans Mono", size: 7pt)
-#set list(indent: 0.85em, marker: [•], spacing: 0.22em, tight: true)
-#set enum(indent: 0.85em, spacing: 0.22em, tight: true)
+#set list(indent: 0.85em, marker: [•], spacing: 0.6em, tight: true)
+#set enum(indent: 0.85em, spacing: 0.6em, tight: true)
+// righe avvolte della stessa entry più strette del margine tra entry
+#show list.item: set par(leading: 0.42em, spacing: 0.35em)
+#show enum.item: set par(leading: 0.42em, spacing: 0.35em)
 
 // ===== BLOCCO INDIVISIBILE =====
 // Tiene un blocco intero: se non entra nella colonna/pagina corrente, slitta
@@ -241,7 +244,7 @@ Preamble da usare come base (adattalo solo se la compilazione lo richiede):
 // ===== TITOLI (non restano orfani in fondo alla colonna) =====
 #set heading(numbering: none)
 #show heading: it => block(
-  breakable: false, sticky: true, above: 0.7em, below: 0.28em,
+  breakable: false, sticky: true, above: 0.8em, below: 0.35em,
 )[
   #text(size: if it.level <= 1 { 11pt } else if it.level == 2 { 9.4pt } else { 8.6pt },
         weight: "bold", fill: primary, it.body)
@@ -250,7 +253,7 @@ Preamble da usare come base (adattalo solo se la compilazione lo richiede):
 
 // ===== BOX (indivisibili) =====
 #let callout(title, body, col: accent, bg: panel) = keep(block(
-  width: 100%, inset: (x: 4pt, y: 3pt), radius: 1pt, fill: bg,
+  width: 100%, inset: (x: 4pt, y: 4pt), radius: 1pt, fill: bg,
   stroke: (top: 0pt + col, right: 0pt + col, bottom: 0pt + col, left: 1.4pt + col),
 )[
   #text(size: 7.9pt, weight: "bold", fill: col)[#title]#h(0.35em)#body
@@ -285,7 +288,7 @@ Preamble da usare come base (adattalo solo se la compilazione lo richiede):
 })
 
 // ===== FIGURE =====
-#set figure(gap: 2.5pt, supplement: [Fig.], numbering: "1")
+#set figure(gap: 4pt, supplement: [Fig.], numbering: "1")
 #show figure.caption: set text(size: 6.9pt, fill: muted)
 ```
 
