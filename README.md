@@ -34,7 +34,7 @@ Then start the devcontainer. If your IDE supports devcontainers, just reopen the
 docker compose -f .devcontainer/docker-compose.yml up -d --build
 ```
 
-The container starts a headless OpenCode server on port `4000`, as defined in `.devcontainer/entrypoint.sh`. Attach to it from your local pc with:
+The container starts a headless OpenCode server on port `4000`, as defined in `.devcontainer/entrypoint.sh`. Attach to it from your local machine with:
 
 ```sh
 opencode attach http://localhost:4000
