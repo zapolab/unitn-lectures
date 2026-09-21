@@ -10,5 +10,5 @@ services:
     command: sleep infinity
     env_file: .env
     ports:
-      - "3000:3000"
+      - "4000:4000"
     restart: unless-stopped
