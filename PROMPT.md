@@ -1,7 +1,12 @@
 # COMPITO
 
-Sei un assistente agentico che lavora da CLI dentro una directory locale. Ricevi il
-percorso di un PDF di lezione (l'utente lo passa come `@<path-al-pdf>`), che si trova in
+Sei un assistente agentico che lavora da CLI dentro una directory locale. L'utente ti
+passa questo stesso prompt insieme alla lezione, in una di due forme:
+- `@PROMPT.md @<path_al_file>` — il percorso diretto del PDF di lezione;
+- `PROMPT.md <nome-corso> <numero-lezione>` — solo corso e numero di lezione: il PDF va
+  cercato in `lectures/<nome-corso>/source/<numero-lezione>/`.
+
+In entrambi i casi il PDF di lezione si trova in
 `lectures/<nome-corso>/source/<numero-lezione>/`. Devi produrre UN file Typst
 `<nome-corso>-<numero-lezione>.typ` che riassuma, in modo completo e fedele, le slide di
 quel PDF, e compilarlo in PDF con il compilatore Typst già installato.
@@ -36,11 +41,15 @@ parte concettuale. Un intero capitolo di presentazione del corso va omesso anche
 occupa molte slide: la densità va valutata sulle sole slide di contenuto (vedi 4.4).
 
 ## PARAMETRI
-- PDF di input: il percorso passato dall'utente come `@<path-al-pdf>`, che si trova in
-  `lectures/<nome-corso>/source/<numero-lezione>/`. Se l'utente non lo specifica, rileva
-  l'unico file `.pdf` della directory della lezione che non sia dentro `build/`. Se ce ne sono
-  più di uno, scegli quello con nome/data più recente, DICHIARA la scelta in apertura e
-  vai avanti (non chiedere conferma, sei non interattivo).
+- PDF di input: dipende dalla forma di invocazione (vedi in alto):
+  - `@PROMPT.md @<path_al_file>`: il percorso del PDF passato direttamente dall'utente,
+    dentro `lectures/<nome-corso>/source/<numero-lezione>/`;
+  - `PROMPT.md <nome-corso> <numero-lezione>`: cerca il PDF in
+    `lectures/<nome-corso>/source/<numero-lezione>/`.
+  Rileva tutti i file `.pdf` della directory della lezione che non siano dentro `build/`.
+  Se ce ne sono più di uno (es. una "parte 1" e una "parte 2" della stessa lezione),
+  considerali TUTTI: riassumili insieme come un'unica lezione, nell'ordine
+  naturale/alfabetico dei file, in un unico file di output.
 - Nome file di output (obbligatorio, sia `.typ` sia `.pdf`):
   `<nome-corso>-<numero-lezione>`
   - `<nome-corso>` = nome della directory del corso, cioè la directory che contiene
@@ -220,7 +229,7 @@ Preamble da usare come base (adattalo solo se la compilazione lo richiede):
       #grid(columns: (1fr, auto),
         [<TITOLO LEZIONE>],
         [<nome-corso>-<numero-lezione>])
-      #v(1.5pt)
+      #v(0.75pt)
       #line(length: 100%, stroke: 0.4pt + rule)
     ]
   },
@@ -302,8 +311,8 @@ Elementi opzionali:
     #v(4pt) #line(length: 100%, stroke: 1pt + primary)
   ]
   ```
-- Indice rapido: SOLO se il PDF ha più di ~25 pagine, e solo come elenco compatto
-  `Sezione` (senza numeri di pagina né di slide), una riga per sezione.
+- NON generare alcun indice/elenco degli argomenti ("Sections: …") all'inizio del
+  documento: non serve. Il documento inizia direttamente con il contenuto.
 
 ## 4.3 Struttura del contenuto
 - Segui la struttura delle slide: se il PDF ha titoli di capitolo/sezione, quelli
