@@ -20,7 +20,7 @@ If your IDE supports it, this repo can be opened on a devcontainer, which starts
 
 The devcontainer configuration points to `docker-compose.yml`, so if you prefer you can run it on a server and leave OpenCode working even if your local machine is powered off.
 
-### Instructions
+### Setup
 
 First create your env file from the example and fill in your OpenRouter API key (or the API key for another provider supported by OpenCode):
 
@@ -41,6 +41,22 @@ opencode attach http://localhost:4000
 ```
 
 If the container runs on another machine, replace `localhost` with its address, and make sure the `--hostname` in `.devcontainer/entrypoint.sh` binds to an address reachable from outside the container.
+
+### Generate
+
+Create directories and add source files as described above.
+
+Once you have done that and you have access to OpenCode, ask:
+
+```
+@PROMPT.md @<path_to_source_file>
+```
+
+or
+
+```
+@PROMPT.md <course> <lesson-number>
+```
 
 ## Credits
 
