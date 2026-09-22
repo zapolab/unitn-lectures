@@ -15,6 +15,13 @@ Output (obbligatorio):
 
 Fonte unica = PDF. Vietato aggiungere, correggere, completare, integrare da tue conoscenze o da web. Ogni frase tracciabile a una slide. Ambiguità o estrazione corrotta → `#warn([DA VERIFICARE], [<cosa e dove>])`, niente invenzioni.
 
+Ambito di lettura consentito = ristretto. NON sei libero di girare le directory: non esplorare né leggere nulla fuori da `lectures/<corso>/source/<lezione>/`. NON usare `git` (log, storia, diff, show) per ricavare istruzioni, preamble, struttura o contenuto. Gli unici file che ti è consentito leggere e utilizzare sono:
+- `PROMPT.md` e `STYLE.md` (le regole);
+- il/i PDF sorgente presenti nella sola directory della lezione corrente;
+- tutti i file e le directory dentro `lectures/<corso>/source/<lezione>/`.
+
+Vietato leggere `.typ`, PDF, `_estrazione.md`, `_mappa_concetti.md` o qualsiasi artefatto di altre lezioni o altri corsi.
+
 Scope = solo contenuto tecnico (concetti, definizioni, modelli, architetture, algoritmi, formule, esempi). Escludi presentazione corso, docenti, calendario, orari, aule, esami, voti, testi, FAQ, tool/piattaforme, link, ringraziamenti, slide mute. Nelle slide miste estrai solo la parte concettuale.
 Un intero capitolo amministrativo va omesso anche se lungo.
 

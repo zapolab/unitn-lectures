@@ -54,10 +54,10 @@ Preamble di base (adatta solo se la compilazione lo richiede):
 
 // tabelle indivisibili, solo filetti orizzontali
 #let cmp(cols, ..cells) = keep({
-  let c = cells.pos()
+  let c = cells.pos(); let n = cols.len()
   grid(columns: cols, inset: (x: 4pt, y: 3pt), align: left,
     stroke: (x,y) => if y>0 {(top: 0.35pt+rule)} else {none},
-    ..c.enumerate().map(((i,v)) => if calc.rem(i,cols)==0 {text(weight:"bold", fill:primary, v)} else {v}))
+    ..c.enumerate().map(((i,v)) => if calc.rem(i,n)==0 {text(weight:"bold", fill:primary, v)} else {v}))
 })
 #let tbl(cols, head: (), ..cells) = keep({
   let c = cells.pos(); let hs = head
@@ -104,6 +104,7 @@ Dipende dal **contenuto**, non dal numero di slide — slide vuote/foto non cont
 - Indicativo: ~3–5 pagine A4 a due colonne per lezione media; 6–8 se molto densa; 2–3 se poco tecnica. Sono indizi, non vincoli.
 - Vincolo reale: **zero contenuto perso** — tutte le definizioni, elenchi, formule, tabelle, figure devono comparire integralmente.
 - Non gonfiare per raggiungere pagine, non tagliare per rientrare in un rapporto: unica misura è il contenuto.
+- Non forzare la compressione se, dopo la compressione, resta un solo paragrafo/blocco isolato in una nuova pagina: accetta la pagina in più invece di tagliare contenuto o comprimere oltre.
 
 Come comprimere:
 - fondi punti quasi sinonimi in un unico punto con sotto-voci separate da `;`;
