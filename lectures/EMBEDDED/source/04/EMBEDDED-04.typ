@@ -1,71 +1,6 @@
-#let ink=rgb("#1F2328"); #let primary=rgb("#1B4965"); #let accent=rgb("#B45309")
-#let defcol=rgb("#2A6F6A"); #let danger=rgb("#9B1C1C"); #let panel=rgb("#F2F5F7")
-#let headbg=rgb("#E9EFF3"); #let rule=rgb("#C7D3DB"); #let muted=rgb("#5A6B76")
-
-#set page(paper: "a4", margin: (x: 13mm, top: 12mm, bottom: 13mm), columns: 2,
-  numbering: "1",
-  header: context {
-    set text(size: 6.6pt, fill: muted)
-    block(width: 100%)[
-      #grid(columns: (1fr, auto), [Processors and I/O], [EMBEDDED-04])
-      #v(0.75pt) #line(length: 100%, stroke: 0.4pt + rule)
-    ]
-  })
-
-#set text(font: "New Computer Modern", size: 8.4pt, lang: "it", fill: ink, hyphenate: true)
-#set par(justify: true, leading: 0.55em, spacing: 0.5em, first-line-indent: 0em)
-#show raw: set text(font: "DejaVu Sans Mono", size: 6.4pt)
-#set list(indent: 0.85em, marker: [•], spacing: 0.6em, tight: true)
-#set enum(indent: 0.85em, spacing: 0.6em, tight: true)
-#show list.item: set par(leading: 0.42em, spacing: 0.35em)
-#show enum.item: set par(leading: 0.42em, spacing: 0.35em)
-
-#let keep(body) = block(breakable: false, width: 100%, body)
-
-#set heading(numbering: none)
-#show heading: it => block(breakable: false, sticky: true, above: 0.8em, below: 0.35em)[
-  #text(size: if it.level<=1 {11pt} else if it.level==2 {9.4pt} else {8.6pt},
-        weight: "bold", fill: primary, it.body)
-  #if it.level<=1 [#v(-0.7em) #line(length: 100%, stroke: 0.7pt + rule)]
-]
-
-#let callout(title, body, col: accent, bg: panel) = keep(block(
-  width: 100%, inset: (x: 4pt, y: 4pt), radius: 1pt, fill: bg,
-  stroke: (top: 0pt+col, right: 0pt+col, bottom: 0pt+col, left: 1.4pt+col))[
-  #text(size: 7.9pt, weight: "bold", fill: col)[#title]#h(0.35em)#body
-])
-#let keypt(t,b) = callout(t,b, col: accent, bg: rgb("#FDF4E7"))
-#let defbox(t,b) = callout(t,b, col: defcol, bg: rgb("#EDF5F4"))
-#let warn(t,b)   = callout(t,b, col: danger, bg: rgb("#FBEDED"))
-
-#let cmp(cols, ..cells) = keep({
-  let c = cells.pos(); let n = cols.len()
-  grid(columns: cols, inset: (x: 4pt, y: 3pt), align: left,
-    stroke: (x,y) => if y>0 {(top: 0.35pt+rule)} else {none},
-    ..c.enumerate().map(((i,v)) => if calc.rem(i,n)==0 {text(weight:"bold", fill:primary, v)} else {v}))
-})
-#let tbl(cols, head: (), ..cells) = keep({
-  let c = cells.pos(); let hs = head
-  grid(columns: cols, inset: (x: 4pt, y: 3pt), align: left,
-    fill: (x,y) => if hs != () and y==0 {headbg} else {none},
-    stroke: (x,y) => if y>0 {(top: 0.35pt+rule)} else {none},
-    ..if hs != () {hs.map(v => text(weight:"bold", fill:primary, v))} else {()},
-    ..c)
-})
-
-#set figure(gap: 4pt, supplement: [Fig.], numbering: "1")
-#show figure.caption: set text(size: 6.9pt, fill: muted)
-
-// box che riempie la cella di griglia
-#let gb(body, fill: rgb("#FFFFFF"), sz: 5.6pt, pad: 2pt) = block(
-  width: 100%, inset: (x: 2.5pt, y: pad), radius: 1.5pt, fill: fill,
-  stroke: 0.5pt + ink, text(size: sz, align(center, body)))
-
-#place(top, scope: "parent", float: true)[
-  #text(14.5pt, weight: "bold", fill: primary)[Processors and I/O]
-  #v(2pt) #text(7.3pt, fill: muted)[EMBEDDED — Lezione 4]
-  #v(4pt) #line(length: 100%, stroke: 1pt + primary)
-]
+#import "_preamble.typ": *
+#show: doc.with(title: "Processors and I/O", label: "EMBEDDED-04")
+#titleblock("Processors and I/O", "EMBEDDED — Lezione 4")
 
 == Processor and Input and Output Devices
 Other than the CPU, sono presenti molti *peripherals* (I/O devices): Timers, UART, Sensors.
@@ -333,9 +268,7 @@ main() {
 #figure(
   block(stroke: 0.5pt + rule, inset: 5pt, width: 100%, {
     grid(columns: range(8).map(_ => 1fr), column-gutter: 0pt, row-gutter: 0pt,
-      ..([], [a], [b], [c], [d], [e], [f], [g]).map(v => block(
-        width: 100%, inset: (x: 0pt, y: 3pt), stroke: 0.5pt + rule, fill: white,
-        text(size: 6pt, align(center, v)))))
+      ..([], [a], [b], [c], [d], [e], [f], [g]).map(v => cellbox(v)))
     v(2pt)
     grid(columns: range(8).map(_ => 1fr),
       align(center, text(size: 5.5pt, fill: accent)[head]),
@@ -491,10 +424,8 @@ Bit[3] modificato dall'ISR viene sovrascritto dal main program.
 - Il *Programmable interrupt controller* (PIC) prioritizza più sorgenti di interrupt in modo che, in ogni momento, l'interrupt a priorità più alta sia presentato alla core CPU per il processing.
 - Cortex-M integra questa funzione nell'*NVIC*.
 
-#figure(
-  raw("Airbag Sensor HIGHEST \\\nBreak Sensor  HIGH     \\\nReal Time Clk MED       > PIC --> CPU\nFuel Level    LOW      /        (Interrupt Vector)", block: true),
-  caption: [Sorgenti di interrupt con priorità HIGHEST/HIGH/MED/LOW verso il PIC, poi verso la CPU; il PIC fornisce l'Interrupt Vector.]
-)
+#asciifig("Airbag Sensor HIGHEST \\\nBreak Sensor  HIGH     \\\nReal Time Clk MED       > PIC --> CPU\nFuel Level    LOW      /        (Interrupt Vector)",
+  [Sorgenti di interrupt con priorità HIGHEST/HIGH/MED/LOW verso il PIC, poi verso la CPU; il PIC fornisce l'Interrupt Vector.])
 
 === Priority logic and nested interrupts
 - La *priority logic* seleziona la highest eligible request; il PIC memorizza il priority level di quell'interrupt in un registro interno.
