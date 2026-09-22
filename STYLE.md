@@ -39,7 +39,7 @@ Preamble di base (adatta solo se la compilazione lo richiede):
 #show heading: it => block(breakable: false, sticky: true, above: 0.8em, below: 0.35em)[
   #text(size: if it.level<=1{11pt} else if it.level==2{9.4pt} else {8.6pt},
         weight: "bold", fill: primary, it.body)
-  #if it.level<=1 [#v(1.5pt) #line(length: 100%, stroke: 0.7pt + rule)]
+  #if it.level<=1 [#v(-0.7em) #line(length: 100%, stroke: 0.7pt + rule)]
 ]
 
 // box indivisibili
