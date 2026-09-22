@@ -6,81 +6,43 @@
 - Nessun testo/commento fuori dal `.typ`.
 
 ## Layout: A4, due colonne, massima densità
-Preamble di base (adatta solo se la compilazione lo richiede):
+Il layout è definito una volta in `tools/preamble.typ` (colori, page A4 2 colonne, font, heading, callout, tabelle, figure). Nella dir lezione:
+1. copia `cp ../../../../tools/preamble.typ _preamble.typ`;
+2. in testa al `.typ`:
 
 ```typst
-#let ink=rgb("#1F2328"); #let primary=rgb("#1B4965"); #let accent=rgb("#B45309")
-#let defcol=rgb("#2A6F6A"); #let danger=rgb("#9B1C1C"); #let panel=rgb("#F2F5F7")
-#let headbg=rgb("#E9EFF3"); #let rule=rgb("#C7D3DB"); #let muted=rgb("#5A6B76")
-
-#set page(paper: "a4", margin: (x: 13mm, top: 12mm, bottom: 13mm), columns: 2,
-  numbering: "1",
-  header: context {
-    set text(size: 6.6pt, fill: muted)
-    block(width: 100%)[
-      #grid(columns: (1fr, auto), [<TITOLO LEZIONE>], [<corso>-<n.lezione>])
-      #v(0.75pt) #line(length: 100%, stroke: 0.4pt + rule)
-    ]
-  })
-
-#set text(font: "New Computer Modern", size: 8.4pt, lang: "it", fill: ink, hyphenate: true)
-#set par(justify: true, leading: 0.55em, spacing: 0.5em, first-line-indent: 0em)
-#show raw: set text(font: "DejaVu Sans Mono", size: 7pt)
-#set list(indent: 0.85em, marker: [•], spacing: 0.6em, tight: true)
-#set enum(indent: 0.85em, spacing: 0.6em, tight: true)
-#show list.item: set par(leading: 0.42em, spacing: 0.35em)
-#show enum.item: set par(leading: 0.42em, spacing: 0.35em)
-
-// blocco indivisibile: slitta intero se non entra
-#let keep(body) = block(breakable: false, width: 100%, body)
-
-// titoli mai orfani
-#set heading(numbering: none)
-#show heading: it => block(breakable: false, sticky: true, above: 0.8em, below: 0.35em)[
-  #text(size: if it.level<=1{11pt} else if it.level==2{9.4pt} else {8.6pt},
-        weight: "bold", fill: primary, it.body)
-  #if it.level<=1 [#v(-0.7em) #line(length: 100%, stroke: 0.7pt + rule)]
-]
-
-// box indivisibili
-#let callout(title, body, col: accent, bg: panel) = keep(block(
-  width: 100%, inset: (x: 4pt, y: 4pt), radius: 1pt, fill: bg,
-  stroke: (top: 0pt+col, right: 0pt+col, bottom: 0pt+col, left: 1.4pt+col))[
-  #text(size: 7.9pt, weight: "bold", fill: col)[#title]#h(0.35em)#body
-])
-#let keypt(t,b) = callout(t,b, col: accent, bg: rgb("#FDF4E7"))
-#let defbox(t,b) = callout(t,b, col: defcol, bg: rgb("#EDF5F4"))
-#let warn(t,b)   = callout(t,b, col: danger, bg: rgb("#FBEDED"))
-
-// tabelle indivisibili, solo filetti orizzontali
-#let cmp(cols, ..cells) = keep({
-  let c = cells.pos(); let n = cols.len()
-  grid(columns: cols, inset: (x: 4pt, y: 3pt), align: left,
-    stroke: (x,y) => if y>0 {(top: 0.35pt+rule)} else {none},
-    ..c.enumerate().map(((i,v)) => if calc.rem(i,n)==0 {text(weight:"bold", fill:primary, v)} else {v}))
-})
-#let tbl(cols, head: (), ..cells) = keep({
-  let c = cells.pos(); let hs = head
-  grid(columns: cols, inset: (x: 4pt, y: 3pt), align: left,
-    fill: (x,y) => if hs != () and y==0 {headbg} else {none},
-    stroke: (x,y) => if y>0 {(top: 0.35pt+rule)} else {none},
-    ..if hs != () {hs.map(v => text(weight:"bold", fill:primary, v))} else {()},
-    ..c)
-})
-
-#set figure(gap: 4pt, supplement: [Fig.], numbering: "1")
-#show figure.caption: set text(size: 6.9pt, fill: muted)
+#import "_preamble.typ": *
+#show: doc.with(title: "<TITOLO LEZIONE>", label: "<corso>-<lezione>")
+#titleblock("<TITOLO LEZIONE>", "<corso> — Lezione <n>")   // opzionale
 ```
 
-Opzionale — blocco titolo a piena larghezza in cima:
+`doc` applica al body tutte le regole di pagina/testo/heading/figure. **Non ricopiare il preamble nel `.typ`.** Niente indice/elenco argomenti iniziale: si parte diretti col contenuto.
+
+Helper esportati (dettagli e firme in `tools/preamble.typ`):
+- `keep(body)`, `callout/keypt/defbox/warn(title, body)`, `cmp(cols, ..cells)`, `tbl(cols, head: (), ..cells)`;
+- pattern diagrammi: `gb`, `flow`, `vflow`, `cellbox`, `asciifig`, `titleblock` (vedi sotto).
+
+## Pattern riutilizzabili
+Pattern canonici, testati e generali. Usali come mattoni per i diagrammi; non reinventarli.
+
+- `gb(body, fill: white, sz: 5.6pt)` — box che riempie la cella di griglia (blocchi di schemi).
+- `flow(..items)` — flusso orizzontale, frecce `$arrow.r$` inserite automaticamente tra i blocchi.
+- `vflow(..items)` — flusso verticale, frecce `$arrow.b$` automatiche.
+- `cellbox(v, fill: white)` — cella di array/buffer (es. circular buffer).
+- `asciifig(text, cap)` — figura ASCII: `raw(text, block: true)` + didascalia di una riga.
+- `titleblock(title, sub)` — blocco titolo a piena larghezza in cima.
+
 ```typst
-#place(top, scope: "parent", float: true)[
-  #text(14.5pt, weight: "bold", fill: primary)[<TITOLO LEZIONE>]
-  #v(2pt) #text(7.3pt, fill: muted)[<corso> — Lezione <n>]
-  #v(4pt) #line(length: 100%, stroke: 1pt + primary)
-]
+#flow(gb[CPU], gb[Registri], gb[Device])
+#vflow(gb[A], gb[B], gb[C])
+#asciifig("main() --ISR--> main() --> Time", [Timeline foreground/ISR.])
 ```
-Niente indice/elenco argomenti iniziale: si parte diretti col contenuto.
+
+Vincoli dei pattern:
+- ASCII solo per strutture semplici (alberi, timeline, flusso 3–5 nodi), larghezza max ~56 caratteri, derivata dal PDF.
+- griglie/buffer: `grid(columns: range(n).map(_ => 1fr), column-gutter: 0pt, ..cells.map(cellbox))`.
+- etichette/frecce: stesse del PDF; nessun contenuto inventato.
+- **Nuovi pattern**: se durante una lezione ne emerge uno generale e verificato (compile pulita), aggiungilo a questo elenco con firma + un esempio, senza duplicare quelli esistenti.
 
 ## Struttura del contenuto
 - Segui la struttura delle slide (titoli capitolo → `=`/`==`); non inventare organizzazione.
@@ -96,7 +58,7 @@ Niente indice/elenco argomenti iniziale: si parte diretti col contenuto.
 - Numeri, formule, unità, notazione, nomi: copiati esatti. Dubbi → `#warn([DA VERIFICARE], ...)`.
 - Lingua del riassunto = lingua delle slide; terminologia tecnica resta nella lingua originale (di norma inglese), mai tradotta.
 - Didascalie figure: dal PDF o descrizione oggettiva, mai inventate, mai numeri di pagina.
-- Codice/espressioni: inline con backtick; blocchi con ` ```typst ` non indentati.
+- Codice/espressioni: inline con backtick; blocchi con ` ```typst ` (o linguaggio reale) non indentati. `raw` è a 6.4pt per stare nella colonna: spezza le righe lunghe (~62 caratteri max), senza alterare il contenuto.
 
 ## Lunghezza (compressione)
 Dipende dal **contenuto**, non dal numero di slide — slide vuote/foto non contano, slide dense (definizioni, elenchi, formule, tabelle, figure) sì.
