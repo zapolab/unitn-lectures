@@ -60,13 +60,13 @@ Attenzione all'ambiente: l'output dei tool può essere redatto o alterato. Prima
 ## 0. Ricognizione
 `ls -la` nella dir lezione e `pdfinfo "<pdf>"` (pagine, dimensioni, cifratura). Verifica gli strumenti: `command -v pdftotext pdftoppm pdftocairo mutool tesseract python3 typst`.
 - Testo: `pdftotext -layout` → `mutool draw -F txt` → PyMuPDF.
-- Render (solo per *leggere* slide/figure, mai per produrre figure): `pdftoppm`/`pdftocairo` → PyMuPDF `page.get_pixmap()`. OCR `tesseract` per il cross-check e per testo in scansioni.
-- `bash tools/estrai.sh .` fa testo + contact sheet + cross-check OCR in un colpo (Fase 1). I contact sheet sono supporto di lettura, non figure di output.
+- Render (solo per *leggere* slide/figure, mai per produrre figure): `pdftoppm`/`pdftocairo` → PyMuPDF `page.get_pixmap()`. OCR `tesseract` solo in caso di dubbi estremi (cross-check manuale) o per testo in scansioni.
+- `bash tools/estrai.sh .` fa testo + contact sheet in un colpo (Fase 1). I contact sheet sono supporto di lettura, non figure di output.
 
 ## 1. Estrazione
-Scaffold automatico: `bash tools/estrai.sh .` → `_estrazione_raw.txt` (testo pagina per pagina di tutti i PDF in ordine naturale) + `build/sheet-*.png` + `_crosscheck.txt` (divergenze OCR vs layer testuale). Il cross-check OCR è attivo di default (`--no-ocr` per saltarlo): renderizza a ~300 dpi, esegue `tesseract` e confronta i token con `pdftotext`; `_crosscheck.txt` è vuoto se non ci sono divergenze. In alternativa, manuale:
+Scaffold automatico: `bash tools/estrai.sh .` → `_estrazione_raw.txt` (testo pagina per pagina di tutti i PDF in ordine naturale) + `build/sheet-*.png`. In alternativa, manuale:
 `for p in $(seq 1 $N); do echo "=== PAGE $p ==="; pdftotext -layout -nopgbrk -f $p -l $p "<pdf>" -; done`
-Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR, marcato `DA VERIFICARE`. **Verifica visiva obbligatoria**: per codice, comandi, formule, identificatori, numeri, tabelle ed etichette di figure trascrivi dal render (contact sheet; render mirato a 150–200 dpi se illeggibile) e usa `_crosscheck.txt` come spia delle divergenze. Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo.
+Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR, marcato `DA VERIFICARE`. **Verifica visiva obbligatoria**: per codice, comandi, formule, identificatori, numeri, tabelle ed etichette di figure trascrivi dal render (contact sheet; render mirato a 150–200 dpi se illeggibile). **Solo in caso di dubbio estremo** (testo sospetto, valori che paiono alterati, scansione, PDF cifrato) attiva il cross-check OCR con `bash tools/estrai.sh --ocr .`: confronta `pdftotext` con `tesseract` e scrive `_crosscheck.txt` elencando `solo testo` (token del layer assenti nel render). Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo.
 
 ## 2. Figure
 Leggi `build/sheet-*.png` (9 pagine/foglio) per la ricognizione visiva. Se un'etichetta è illeggibile, render mirato **solo per leggere**: `pdftoppm -r 150 -f P -l P "<pdf>" build/pg`; in alternativa `mutool draw -F stext -o - "<pdf>" P`. Non salvare ritagli come figure.
@@ -119,7 +119,7 @@ Se durante la lezione ricavi un pattern di figura/struttura **generale e testato
 - Nessuna tabella a griglia completa: `#cmp`/`#tbl` con soli filetti orizzontali.
 - Lunghezza coerente col contenuto: zero **contenuto in-scope** perso, nessun gonfiaggio né taglio per rientrare in un rapporto slide/pagina.
 - Tutti i `DA VERIFICARE` raccolti.
-- `_crosscheck.txt` esaminato; divergenze risolte o annotate.
+- Se è stato generato, `_crosscheck.txt` esaminato; divergenze risolte o annotate.
 - Correzioni minime registrate nel report.
 - `bash tools/qa.sh .` senza FAIL; PDF finale in `lectures/<corso>/<corso>-<lezione>.pdf` leggibile.
 
@@ -129,5 +129,5 @@ Se durante la lezione ricavi un pattern di figura/struttura **generale e testato
 3. Pagine/slide scartate con motivo (incluso il contenuto amministrativo omesso).
 4. Figure incluse (file ↔ origine) ed eventuali escluse con motivo.
 5. `DA VERIFICARE` e contenuti non fedeli (cosa servirebbe per risolverli).
-6. Correzioni minime effettuate (dove e perché) e mismatch OCR risolti.
+6. Correzioni minime effettuate (dove e perché); mismatch OCR risolti se il cross-check è stato eseguito.
 7. Conteggio pagine finali vs target.
