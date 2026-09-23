@@ -37,6 +37,13 @@ else note OK "compile pulita"; fi
 n=$(grep -c 'DA VERIFICARE' "$typ" || true)
 note INFO "DA VERIFICARE: $n"
 
+# 5b. cross-check OCR
+if [ -f _crosscheck.txt ]; then
+  nc=$(grep -c '^===' _crosscheck.txt 2>/dev/null || true)
+  if [ "${nc:-0}" -gt 0 ]; then note INFO "_crosscheck.txt: $nc pagine con divergenze OCR da verificare"
+  else note OK "_crosscheck.txt: nessuna divergenza OCR"; fi
+else note INFO "_crosscheck.txt assente (cross-check OCR non eseguito)"; fi
+
 # 6. PDF finale
 parent=$(basename "$(cd ../.. && pwd)")   # corso = dir che contiene source/
 lesson=$(basename "$(pwd)")               # lezione
