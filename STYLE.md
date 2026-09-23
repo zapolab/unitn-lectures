@@ -2,6 +2,7 @@
 
 ## Vincoli tecnici
 - Typst 0.15.x. **Online**: si usano i pacchetti `@preview` (versione pinnata esatta); il primo `compile` li scarica, poi restano in cache. Import nel `.typ` della lezione, non nel preamble.
+- **Path assoluti**: tutti i comandi usano path assoluti; radice repo `/workspace`. Vietato `../` e path relativi.
 - Font ammessi (CLI embedded): `New Computer Modern`, `New Computer Modern Math`, `DejaVu Sans Mono`, `Libertinus Serif`. Niente emoji/Unicode esotico → simboli matematici sempre in math mode (`$arrow.r$`, `$alpha$`, ecc.).
 - Nessun testo/commento fuori dal `.typ`.
 - **Figure sempre vettoriali Typst** (pattern o pacchetti).
@@ -30,8 +31,8 @@ Pattern fletcher per architetture/flowchart (scalato dentro la colonna):
 ```
 
 ## Layout: A4, due colonne, massima densità
-Il layout è definito una volta in `tools/preamble.typ` (colori, page A4 2 colonne, font, heading, callout, tabelle, figure). Nella dir lezione:
-1. copia `cp ../../../../tools/preamble.typ _preamble.typ`;
+Il layout è definito una volta in `/workspace/tools/preamble.typ` (colori, page A4 2 colonne, font, heading, callout, tabelle, figure). Nella dir lezione:
+1. copia `cp /workspace/tools/preamble.typ /workspace/lectures/<corso>/source/<lezione>/_preamble.typ`;
 2. in testa al `.typ`:
 
 ```typst
@@ -42,7 +43,7 @@ Il layout è definito una volta in `tools/preamble.typ` (colori, page A4 2 colon
 
 `doc` applica al body tutte le regole di pagina/testo/heading/figure. **Non ricopiare il preamble nel `.typ`.** Niente indice/elenco argomenti iniziale: si parte diretti col contenuto.
 
-Helper esportati (dettagli e firme in `tools/preamble.typ`):
+Helper esportati (dettagli e firme in `/workspace/tools/preamble.typ`):
 - `keep(body)`, `callout/keypt/defbox/warn(title, body)`, `cmp(cols, ..cells)`, `tbl(cols, head: (), ..cells)`;
 - figure/pattern: `asciifig`, `titleblock` (vedi sotto).
 

@@ -38,11 +38,11 @@ Fonte unica = PDF. Non aggiungere né completare con conoscenze tue o dal web: o
 
 Ambito di lettura consentito = ristretto. NON sei libero di girare le directory: non esplorare né leggere nulla fuori da `lectures/<corso>/source/<lezione>/`. NON usare `git` (log, storia, diff, show) per ricavare istruzioni, preamble, struttura o contenuto. Gli unici file che ti è consentito leggere e utilizzare sono:
 - `PROMPT.md` e `STYLE.md` (le regole);
-- gli strumenti condivisi in `tools/` (sola lettura/esecuzione: `tools/preamble.typ`, `tools/estrai.sh`, `tools/qa.sh`);
+- gli strumenti condivisi in `/workspace/tools/` (sola lettura/esecuzione: `/workspace/tools/preamble.typ`, `/workspace/tools/estrai.sh`, `/workspace/tools/qa.sh`);
 - il/i PDF sorgente presenti nella sola directory della lezione corrente;
 - tutti i file e le directory dentro `lectures/<corso>/source/<lezione>/`.
 
-Vietato leggere `.typ`, PDF, `_estrazione.md`, `_mappa_concetti.md` o qualsiasi artefatto di altre lezioni o altri corsi. `tools/` è l'unica eccezione fuori dalla dir lezione.
+Vietato leggere `.typ`, PDF, `_estrazione.md`, `_mappa_concetti.md` o qualsiasi artefatto di altre lezioni o altri corsi. `/workspace/tools/` è l'unica eccezione fuori dalla dir lezione.
 
 Scope = solo **contenuto in-scope** (v. Definizioni). Escludi il **contenuto amministrativo** e le **slide mute** (v. Definizioni). Nelle slide miste estrai solo la parte in-scope.
 Un intero capitolo amministrativo va omesso anche se lungo.
@@ -55,18 +55,20 @@ Fedeltà: la slide renderizzata è la fonte di verità, l'estrazione testuale è
 
 Attenzione all'ambiente: l'output dei tool può essere redatto o alterato. Prima di dichiarare corrotta un'estrazione, verifica con una rappresentazione alternativa (render, `od`, lunghezza del valore): non concludere da un singolo output testuale.
 
+**Path assoluti**: tutti i comandi usano path assoluti. Radice repo = `/workspace`. Vietato `../` e path relativi nei comandi (soprattutto verso `/workspace/tools/` e verso l'output). I placeholder `<corso>`/`<lezione>` restano, ma sempre dentro path assoluti: `/workspace/lectures/<corso>/source/<lezione>/` e `/workspace/lectures/<corso>/<corso>-<lezione>.pdf`.
+
 # PROCEDURA
 
 ## 0. Ricognizione
 `ls -la` nella dir lezione e `pdfinfo "<pdf>"` (pagine, dimensioni, cifratura). Verifica gli strumenti: `command -v pdftotext pdftoppm pdftocairo mutool tesseract python3 typst`.
 - Testo: `pdftotext -layout` → `mutool draw -F txt` → PyMuPDF.
 - Render (solo per *leggere* slide/figure, mai per produrre figure): `pdftoppm`/`pdftocairo` → PyMuPDF `page.get_pixmap()`. OCR `tesseract` solo in caso di dubbi estremi (cross-check manuale) o per testo in scansioni.
-- `bash tools/estrai.sh .` fa testo + contact sheet in un colpo (Fase 1). I contact sheet sono supporto di lettura, non figure di output.
+- `bash /workspace/tools/estrai.sh /workspace/lectures/<corso>/source/<lezione>` fa testo + contact sheet in un colpo (Fase 1). I contact sheet sono supporto di lettura, non figure di output.
 
 ## 1. Estrazione
-Scaffold automatico: `bash tools/estrai.sh .` → `_estrazione_raw.txt` (testo pagina per pagina di tutti i PDF in ordine naturale) + `build/sheet-*.png`. In alternativa, manuale:
+Scaffold automatico: `bash /workspace/tools/estrai.sh /workspace/lectures/<corso>/source/<lezione>` → `_estrazione_raw.txt` (testo pagina per pagina di tutti i PDF in ordine naturale) + `build/sheet-*.png`. In alternativa, manuale:
 `for p in $(seq 1 $N); do echo "=== PAGE $p ==="; pdftotext -layout -nopgbrk -f $p -l $p "<pdf>" -; done`
-Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR, marcato `DA VERIFICARE`. **Verifica visiva obbligatoria**: per codice, comandi, formule, identificatori, numeri, tabelle ed etichette di figure trascrivi dal render (contact sheet; render mirato a 150–200 dpi se illeggibile). **Solo in caso di dubbio estremo** (testo sospetto, valori che paiono alterati, scansione, PDF cifrato) attiva il cross-check OCR con `bash tools/estrai.sh --ocr .`: confronta `pdftotext` con `tesseract` e scrive `_crosscheck.txt` elencando `solo testo` (token del layer assenti nel render). Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo.
+Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR, marcato `DA VERIFICARE`. **Verifica visiva obbligatoria**: per codice, comandi, formule, identificatori, numeri, tabelle ed etichette di figure trascrivi dal render (contact sheet; render mirato a 150–200 dpi se illeggibile). **Solo in caso di dubbio estremo** (testo sospetto, valori che paiono alterati, scansione, PDF cifrato) attiva il cross-check OCR con `bash /workspace/tools/estrai.sh --ocr /workspace/lectures/<corso>/source/<lezione>`: confronta `pdftotext` con `tesseract` e scrive `_crosscheck.txt` elencando `solo testo` (token del layer assenti nel render). Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo.
 
 ## 2. Figure
 Leggi `build/sheet-*.png` (9 pagine/foglio) per la ricognizione visiva. Se un'etichetta è illeggibile, render mirato **solo per leggere**: `pdftoppm -r 150 -f P -l P "<pdf>" build/pg`; in alternativa `mutool draw -F stext -o - "<pdf>" P`. Non salvare ritagli come figure.
@@ -81,7 +83,7 @@ Se non puoi vedere l'originale: ridisegna lo schema dalle etichette/struttura te
 ## 4. Typst
 Segui `STYLE.md` per vincoli tecnici, layout, pattern, stile e criteri di lunghezza/compressione. In sintesi:
 
-`cp ../../../../tools/preamble.typ _preamble.typ` e in testa al `.typ`:
+`cp /workspace/tools/preamble.typ /workspace/lectures/<corso>/source/<lezione>/_preamble.typ` e in testa al `.typ`:
 ```typst
 #import "_preamble.typ": *
 #show: doc.with(title: "<TITOLO LEZIONE>", label: "<corso>-<lezione>")
@@ -98,16 +100,17 @@ Non ripetere qui le regole di `STYLE.md`: applicale direttamente al file .typ.
 
 ## 5. Compilazione e QA
 Dalla dir lezione:
-`typst compile <corso>-<lezione>.typ ../../<corso>-<lezione>.pdf`
+`typst compile /workspace/lectures/<corso>/source/<lezione>/<corso>-<lezione>.typ /workspace/lectures/<corso>/<corso>-<lezione>.pdf`
 (nessun output intermedio in `build/`; `--font-path ./fonts` se hai font locali). Zero errori e zero warning: i warning di glifo mancante si risolvono sostituendo il carattere con math mode o testo. Itera finché pulito.
 
-Poi `bash tools/qa.sh .` (riferimenti vietati, titoli duplicati, figure mancanti/orfane, compile pulita, DA VERIFICARE, PDF finale). Correggi i FAIL e ricompila.
+Poi `bash /workspace/tools/qa.sh /workspace/lectures/<corso>/source/<lezione>` (riferimenti vietati, titoli duplicati, figure mancanti/orfane, compile pulita, DA VERIFICARE, PDF finale). Correggi i FAIL e ricompila.
 
 ## 6. Pattern riutilizzabili
 Se durante la lezione ricavi un pattern di figura/struttura **generale e testato** (compile pulita), aggiungilo a `STYLE.md` §Pattern riutilizzabili: firma + un esempio, in stile compatto. Non duplicare i pattern già presenti. Non aggiungere snippet specifici, aggiungi solo quelli che ritieni che possano essere riutilizzabili in altre lezioni.
 
 # CHECKLIST
 - Tutte le pagine lette; pagine scartate elencate nel report.
+- Comandi con path assoluti (nessun `../` / path relativo).
 - Contact sheet (`build/sheet-*.png`) usati per le figure; render mirati solo se illeggibili.
 - Nome file conforme, zeri inclusi.
 - Preamble importato da `_preamble.typ` (non ricopiato).
@@ -121,7 +124,7 @@ Se durante la lezione ricavi un pattern di figura/struttura **generale e testato
 - Tutti i `DA VERIFICARE` raccolti.
 - Se è stato generato, `_crosscheck.txt` esaminato; divergenze risolte o annotate.
 - Correzioni minime registrate nel report.
-- `bash tools/qa.sh .` senza FAIL; PDF finale in `lectures/<corso>/<corso>-<lezione>.pdf` leggibile.
+- `bash /workspace/tools/qa.sh /workspace/lectures/<corso>/source/<lezione>` senza FAIL; PDF finale in `lectures/<corso>/<corso>-<lezione>.pdf` leggibile.
 
 # REPORT FINALE (nel messaggio, non nel .typ)
 1. File creati (percorsi completi) e nome adottato con deduzione di `<corso>`/`<lezione>`.
