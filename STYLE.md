@@ -63,6 +63,21 @@ Pattern canonici, testati e generali. Usali come mattoni; non reinventarli.
 #asciifig("main() --ISR--> main() --> Time", [Timeline foreground/ISR.])
 ```
 
+- `proj`/`triad`/`arc3` — frame 3D (assi $x,y,z$) in proiezione isometrica su `cetz`, per geometria/robotica. Definire gli helper locali alla lezione (v. esempio) e disegnare dentro `canvas`. `arc3(axis, start, ang, r)` genera i punti di un arco di rotazione; `triad(o, ex, ey, ez, lx, ly, lz, c:, dash:, len:)` disegna un triedro con etichette.
+
+```typst
+#let proj(p) = ((p.at(0) - p.at(1)) * 0.82, p.at(2) - (p.at(0) + p.at(1)) * 0.42)
+#let triad(o, ex, ey, ez, lx, ly, lz, c: black, dash: none, len: 1.0) = {
+  let oo = proj(o)
+  let st = if dash == none { (stroke: c, mark: (end: ">", fill: c)) }
+           else { (stroke: (paint: c, dash: dash), mark: (end: ">", fill: c)) }
+  draw.line(oo, proj(vadd(o, smul(len, ex))), ..st) // idem per ey, ez
+  draw.content(proj(vadd(o, smul(len * 1.16, ex))), lx, fill: c) // idem ly, lz
+}
+#canvas({ triad((0,0,0), (2,0,0), (0,2,0), (0,0,2), $x_0$, $y_0$, $z_0$)
+           draw.line(..arc3((0,0,1), (1,0,0), 40deg, 0.7), mark: (end: ">")) })
+```
+
 ### Numerazione figure
 `asciifig` (e ogni `raw` dentro un `#figure`) usa un contatore separato da `#figure`: mescolarli duplica i numeri. In **ogni** `#figure` con diagramma fletcher/cetz aggiungi un `#raw("")` (vuoto, reso nullo) nel body, così entra nello stesso contatore:
 
