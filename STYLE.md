@@ -44,21 +44,15 @@ Il layout è definito una volta in `tools/preamble.typ` (colori, page A4 2 colon
 
 Helper esportati (dettagli e firme in `tools/preamble.typ`):
 - `keep(body)`, `callout/keypt/defbox/warn(title, body)`, `cmp(cols, ..cells)`, `tbl(cols, head: (), ..cells)`;
-- pattern diagrammi: `gb`, `flow`, `vflow`, `cellbox`, `asciifig`, `titleblock` (vedi sotto).
+- figure/pattern: `asciifig`, `titleblock` (vedi sotto).
 
 ## Pattern riutilizzabili
-Pattern canonici, testati e generali. Usali come mattoni per i diagrammi; non reinventarli.
+Pattern canonici, testati e generali. Usali come mattoni; non reinventarli.
 
-- `gb(body, fill: white, sz: 5.6pt)` — box che riempie la cella di griglia (blocchi di schemi).
-- `flow(..items)` — flusso orizzontale, frecce `$arrow.r$` inserite automaticamente tra i blocchi.
-- `vflow(..items)` — flusso verticale, frecce `$arrow.b$` automatiche.
-- `cellbox(v, fill: white)` — cella di array/buffer (es. circular buffer).
 - `asciifig(text, cap)` — figura ASCII: `raw(text, block: true)` + didascalia di una riga.
 - `titleblock(title, sub)` — blocco titolo a piena larghezza in cima.
 
 ```typst
-#flow(gb[CPU], gb[Registri], gb[Device])
-#vflow(gb[A], gb[B], gb[C])
 #asciifig("main() --ISR--> main() --> Time", [Timeline foreground/ISR.])
 ```
 
@@ -66,7 +60,6 @@ Vincoli dei pattern:
 - Diagrammi/grafi complessi (architetture, flowchart, alberi, UML): usare `fletcher` (o `cetz`), niente coordinate assolute a mano.
 - Diagramma più largo della colonna: avvolgilo in `#scale(75%, reflow: true)[#figure(...)]`.
 - ASCII solo per strutture semplici (alberi, timeline, flusso 3–5 nodi), larghezza max ~56 caratteri, in `#raw("...", block: true)` o `#asciifig(...)`, derivata dal PDF.
-- griglie/buffer: `grid(columns: range(n).map(_ => 1fr), column-gutter: 0pt, ..cells.map(cellbox))`.
 - etichette/frecce: stesse del PDF; nessun contenuto inventato.
 - **Nuovi pattern**: se durante una lezione ne emerge uno generale e verificato (compile pulita), aggiungilo a questo elenco con firma + un esempio, senza duplicare quelli esistenti.
 

@@ -1,4 +1,4 @@
-// _preamble.typ — preamble condiviso + pattern diagrammi riutilizzabili.
+// _preamble.typ — preamble condiviso.
 // Uso nella lezione:
 //   #import "_preamble.typ": *
 //   #show: doc.with(title: "<TITOLO>", label: "<corso>-<lezione>")
@@ -47,37 +47,7 @@
   #v(4pt) #line(length: 100%, stroke: 1pt + primary)
 ]
 
-// ---- pattern diagrammi ----
-
-// box che riempie la cella di griglia (blocchi/schemi)
-#let gb(body, fill: rgb("#FFFFFF"), sz: 5.6pt, pad: 2pt) = block(
-  width: 100%, inset: (x: 2.5pt, y: pad), radius: 1.5pt, fill: fill,
-  stroke: 0.5pt + ink, text(size: sz, align(center, body)))
-
-// flusso orizzontale: frecce inserite automaticamente tra i blocchi
-#let flow(..items) = {
-  let a = items.pos(); let cells = ()
-  for (i, x) in a.enumerate() {
-    if i > 0 { cells.push($arrow.r$) }
-    cells.push(x)
-  }
-  grid(columns: range(cells.len()).map(_ => auto), column-gutter: 4pt, align: center, ..cells)
-}
-
-// flusso verticale: frecce discendenti tra i blocchi
-#let vflow(..items) = {
-  let a = items.pos(); let rows = ()
-  for (i, x) in a.enumerate() {
-    if i > 0 { rows.push($arrow.b$) }
-    rows.push(x)
-  }
-  grid(columns: 1, row-gutter: 2pt, align: center, ..rows)
-}
-
-// cella di un array/buffer (es. circular buffer)
-#let cellbox(v, fill: white) = block(
-  width: 100%, inset: (x: 0pt, y: 3pt), stroke: 0.5pt + rule, fill: fill,
-  text(size: 6pt, align(center, v)))
+// ---- figura ASCII ----
 
 // figura ASCII: raw monospazio + didascalia, una riga
 #let asciifig(text, cap) = figure(raw(text, block: true), caption: cap)
