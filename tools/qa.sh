@@ -19,14 +19,14 @@ dups=$(grep -oE '^=+ .*' "$typ" | sed 's/^=* //' | sort | uniq -d)
 if [ -n "$dups" ]; then note FAIL "titoli duplicati:"; echo "$dups"; fail=1
 else note OK "nessun titolo duplicato"; fi
 
-# 3. figure: ogni fig/ referenziato esiste; nessun orfano
-refs=$(grep -oE 'fig/[A-Za-z0-9_.-]+' "$typ" | sort -u || true)
-for r in $refs; do [ -f "$r" ] || { note FAIL "fig mancante: $r"; fail=1; }; done
-if [ -d fig ]; then
-  shopt -s nullglob
-  for f in fig/*; do grep -q "$f" "$typ" || note WARN "fig orfano: $f"; done
-fi
-[ -n "$refs" ] && note OK "figure referenziate: $(echo "$refs" | wc -l)"
+# 3. figure: nessun raster, solo vettoriale Typst
+if grep -nE 'image\(|fig/' "$typ"; then
+  note FAIL "immagine raster / dir fig nel .typ (vietate)"; fail=1
+else note OK "nessuna immagine raster"; fi
+
+# 3b. titleblock obbligatorio
+if grep -q '#titleblock(' "$typ"; then note OK "titleblock presente"
+else note FAIL "titleblock mancante"; fail=1; fi
 
 # 4. compilazione pulita (zero errori/warning)
 out=$(typst compile "$typ" /tmp/_qa_build.pdf 2>&1 || true)

@@ -2,9 +2,9 @@
 // Uso nella lezione:
 //   #import "_preamble.typ": *
 //   #show: doc.with(title: "<TITOLO>", label: "<corso>-<lezione>")
-//   #titleblock("<TITOLO>", "<corso> — Lezione <n>")   // opzionale
+//   #titleblock("<TITOLO>", "<corso> — Lezione <n>")   // obbligatorio
 //   <contenuto>
-// Solo Typst standard, nessuna dipendenza esterna.
+// Standard Typst; i pacchetti @preview si importano nel .typ della lezione, non qui.
 
 // ---- colori ----
 #let ink=rgb("#1F2328"); #let primary=rgb("#1B4965"); #let accent=rgb("#B45309")
