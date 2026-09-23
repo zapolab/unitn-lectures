@@ -11,9 +11,30 @@ Output (obbligatorio):
 - Non modificare/spostare/cancellare i PDF originali.
 - Nome file: solo lettere/cifre/trattini, zeri iniziali della dir lezione inclusi. `<corso>` = nome della dir che contiene `source/`; `<lezione>` = nome della dir dentro `source/`.
 
+# DEFINIZIONI
+
+Termini univoci, definiti qui una volta e referenziati altrove. Non ri-enumerare le esclusioni: cita il termine.
+
+- **Contenuto in-scope**: concetti, definizioni, modelli, architetture, algoritmi, formule, comandi, esempi, figure con etichette/legenda, esercizi/laboratori/homework.
+- **Contenuto amministrativo (out-of-scope)**: presentazione e autori del corso, calendario/orari, aule, esami/voti, testi consigliati, FAQ, piattaforme e strumenti di erogazione del corso (LMS, Teams, moduli di consegna), URL, ringraziamenti.
+- **Slide muta**: priva di contenuto in-scope *e* di figure con etichette/legenda leggibili. Una figura con etichette non è muta: si ridisegna.
+- **Link**: URL. Mai riprodotti; se la slide è solo un link, si omette. Una risorsa tecnica può essere nominata a parole.
+- **Strumento tecnico** (linguaggi, DBMS, IDE, librerie, framework, editor oggetto della lezione) → contenuto in-scope. **Piattaforma di corso** (LMS, Teams, consegne) → contenuto amministrativo.
+
+# PRECEDENZA
+
+Rete di sicurezza per i casi non previsti dalle definizioni, in ordine:
+
+1. **Scope > integralità/completezza**: il contenuto amministrativo si omette anche dentro un elenco o una sezione mista.
+2. **Fedeltà > completezza**.
+3. **Render > testo estratto**: in caso di divergenza vince l'aspetto visivo della slide, con `#warn`.
+4. Nel dubbio su un elemento tecnico → includi e annota; nel dubbio su uno amministrativo → escludi.
+
+"Elenchi integrali" e "zero contenuto perso" valgono **solo per il contenuto in-scope**: la rimozione di elementi amministrativi non è un taglio e si registra nel report.
+
 # REGOLE
 
-Fonte unica = PDF. Vietato aggiungere, correggere, completare, integrare da tue conoscenze o da web. Ogni frase tracciabile a una slide. Ambiguità o estrazione corrotta → `#warn([DA VERIFICARE], [<cosa e dove>])`, niente invenzioni.
+Fonte unica = PDF. Non aggiungere né completare con conoscenze tue o dal web: ogni frase deve restare tracciabile a una slide. Sono ammesse **correzioni minime e locali**, solo se l'errore è evidente e autocontenuto nel PDF: refusi, errori di calcolo, incoerenze di notazione/unità nella stessa slide, artefatti di estrazione (testo corrotto vs render). Le correzioni non devono introdurre fatti nuovi; se servirebbe conoscenza esterna o cambierebbe il senso → **non correggere**, usa `#warn([DA VERIFICARE], [<cosa e dove>])`. Le correzioni effettuate si elencano nel report finale.
 
 Ambito di lettura consentito = ristretto. NON sei libero di girare le directory: non esplorare né leggere nulla fuori da `lectures/<corso>/source/<lezione>/`. NON usare `git` (log, storia, diff, show) per ricavare istruzioni, preamble, struttura o contenuto. Gli unici file che ti è consentito leggere e utilizzare sono:
 - `PROMPT.md` e `STYLE.md` (le regole);
@@ -23,25 +44,29 @@ Ambito di lettura consentito = ristretto. NON sei libero di girare le directory:
 
 Vietato leggere `.typ`, PDF, `_estrazione.md`, `_mappa_concetti.md` o qualsiasi artefatto di altre lezioni o altri corsi. `tools/` è l'unica eccezione fuori dalla dir lezione.
 
-Scope = solo contenuto tecnico (concetti, definizioni, modelli, architetture, algoritmi, formule, esempi). Escludi presentazione corso, docenti, calendario, orari, aule, esami, voti, testi, FAQ, tool/piattaforme, link, ringraziamenti, slide mute. Nelle slide miste estrai solo la parte concettuale.
+Scope = solo **contenuto in-scope** (v. Definizioni). Escludi il **contenuto amministrativo** e le **slide mute** (v. Definizioni). Nelle slide miste estrai solo la parte in-scope.
 Un intero capitolo amministrativo va omesso anche se lungo.
 
 Lingua = lingua delle slide. Termini tecnici nella lingua originale (no traduzioni).
 
 Niente riferimenti a pagine/slide nel PDF finale (né numeri, né "vedi sopra", né "come visto prima"), in nessuna forma (titoli, didascalie, header, box, note). La tracciabilità è solo un controllo interno; l'unica numerazione nel PDF è quella generata da Typst.
 
+Fedeltà: la slide renderizzata è la fonte di verità, l'estrazione testuale è un ausilio. Per codice, comandi, formule, identificatori, numeri, tabelle ed etichette di figure la trascrizione va verificata visivamente; se testo estratto e render divergono, si usa il render e si segnala con `#warn`. Correggere un artefatto di estrazione usando il contenuto visivo dello stesso PDF è trascrizione fedele, non aggiunta esterna.
+
+Attenzione all'ambiente: l'output dei tool può essere redatto o alterato. Prima di dichiarare corrotta un'estrazione, verifica con una rappresentazione alternativa (render, `od`, lunghezza del valore): non concludere da un singolo output testuale.
+
 # PROCEDURA
 
 ## 0. Ricognizione
 `ls -la` nella dir lezione e `pdfinfo "<pdf>"` (pagine, dimensioni, cifratura). Verifica gli strumenti: `command -v pdftotext pdftoppm pdftocairo mutool tesseract python3 typst`.
 - Testo: `pdftotext -layout` → `mutool draw -F txt` → PyMuPDF.
-- Render (solo per *leggere* slide/figure, mai per produrre figure): `pdftoppm`/`pdftocairo` → PyMuPDF `page.get_pixmap()`. OCR `tesseract` solo per testo in scansioni.
-- `bash tools/estrai.sh .` fa testo + contact sheet in un colpo (Fase 1). I contact sheet sono supporto di lettura, non figure di output.
+- Render (solo per *leggere* slide/figure, mai per produrre figure): `pdftoppm`/`pdftocairo` → PyMuPDF `page.get_pixmap()`. OCR `tesseract` per il cross-check e per testo in scansioni.
+- `bash tools/estrai.sh .` fa testo + contact sheet + cross-check OCR in un colpo (Fase 1). I contact sheet sono supporto di lettura, non figure di output.
 
 ## 1. Estrazione
-Scaffold automatico: `bash tools/estrai.sh .` → `_estrazione_raw.txt` (testo pagina per pagina di tutti i PDF in ordine naturale) + `build/sheet-*.png`. In alternativa, manuale:
+Scaffold automatico: `bash tools/estrai.sh .` → `_estrazione_raw.txt` (testo pagina per pagina di tutti i PDF in ordine naturale) + `build/sheet-*.png` + `_crosscheck.txt` (divergenze OCR vs layer testuale). Il cross-check OCR è attivo di default (`--no-ocr` per saltarlo): renderizza a ~300 dpi, esegue `tesseract` e confronta i token con `pdftotext`; `_crosscheck.txt` è vuoto se non ci sono divergenze. In alternativa, manuale:
 `for p in $(seq 1 $N); do echo "=== PAGE $p ==="; pdftotext -layout -nopgbrk -f $p -l $p "<pdf>" -; done`
-Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR solo come ultima risorsa, marcato `DA VERIFICARE`. Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo.
+Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR, marcato `DA VERIFICARE`. **Verifica visiva obbligatoria**: per codice, comandi, formule, identificatori, numeri, tabelle ed etichette di figure trascrivi dal render (contact sheet; render mirato a 150–200 dpi se illeggibile) e usa `_crosscheck.txt` come spia delle divergenze. Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo.
 
 ## 2. Figure
 Leggi `build/sheet-*.png` (9 pagine/foglio) per la ricognizione visiva. Se un'etichetta è illeggibile, render mirato **solo per leggere**: `pdftoppm -r 150 -f P -l P "<pdf>" build/pg`; in alternativa `mutool draw -F stext -o - "<pdf>" P`. Non salvare ritagli come figure.
@@ -66,7 +91,7 @@ Segui `STYLE.md` per vincoli tecnici, layout, pattern, stile e criteri di lunghe
 
 Ordine sezioni = ordine dei divider del PDF; == macro-argomento, === concetto.
 Stile telegrafico completo, zero riempitivi.
-Elenchi integrali, numeri/formule/unità/notazione copiati esattamente.
+Elenchi: tutti gli elementi **in-scope**, in ordine, compressi ma non tagliati (gli elementi amministrativi si omettono, v. Definizioni). Numeri/formule/unità/notazione copiati esattamente.
 Niente indice/"Sections" iniziale.
 
 Non ripetere qui le regole di `STYLE.md`: applicale direttamente al file .typ.
@@ -92,14 +117,17 @@ Se durante la lezione ricavi un pattern di figura/struttura **generale e testato
 - Zero contenuto esterno al PDF o amministrativo.
 - Nessun blocco spezzato; nessun paragrafo orfano di 1–2 righe a fondo colonna.
 - Nessuna tabella a griglia completa: `#cmp`/`#tbl` con soli filetti orizzontali.
-- Lunghezza coerente col contenuto: zero contenuto perso, nessun gonfiaggio né taglio per rientrare in un rapporto slide/pagina.
+- Lunghezza coerente col contenuto: zero **contenuto in-scope** perso, nessun gonfiaggio né taglio per rientrare in un rapporto slide/pagina.
 - Tutti i `DA VERIFICARE` raccolti.
+- `_crosscheck.txt` esaminato; divergenze risolte o annotate.
+- Correzioni minime registrate nel report.
 - `bash tools/qa.sh .` senza FAIL; PDF finale in `lectures/<corso>/<corso>-<lezione>.pdf` leggibile.
 
 # REPORT FINALE (nel messaggio, non nel .typ)
 1. File creati (percorsi completi) e nome adottato con deduzione di `<corso>`/`<lezione>`.
 2. PDF usati e ordine; strumenti e limiti.
-3. Pagine/slide scartate con motivo.
+3. Pagine/slide scartate con motivo (incluso il contenuto amministrativo omesso).
 4. Figure incluse (file ↔ origine) ed eventuali escluse con motivo.
 5. `DA VERIFICARE` e contenuti non fedeli (cosa servirebbe per risolverli).
-6. Conteggio pagine finali vs target.
+6. Correzioni minime effettuate (dove e perché) e mismatch OCR risolti.
+7. Conteggio pagine finali vs target.

@@ -73,8 +73,9 @@ Vincoli dei pattern:
 - `#keypt` → solo se le slide stesse evidenziano attenzione/errori tipici/punti d'esame (non aggiungerne di tua iniziativa).
 - `#cmp`/`#tbl` → confronti, classificazioni, cicli (più compatti di elenchi puntati).
 - Parti di presentazione/amministrazione del corso (docenti, orari, voti, FAQ): non riassumerle, non farle comparire.
-- Elenchi delle slide: conservati integralmente (7 punti → 7 punti, compressi ma non tagliati).
+- Elenchi delle slide: conservati integralmente per la parte **in-scope** (v. `PROMPT.md` §Definizioni), compressi ma non tagliati; gli elementi amministrativi si omettono.
 - Numeri, formule, unità, notazione, nomi: copiati esatti. Dubbi → `#warn([DA VERIFICARE], ...)`.
+- Trascrizione: quando il layer testuale diverge dal render, trascrivi dal render (fonte di verità); codice, comandi, formule e tabelle sempre verificati a vista.
 - Lingua del riassunto = lingua delle slide; terminologia tecnica resta nella lingua originale (di norma inglese), mai tradotta.
 - Didascalie figure: dal PDF o descrizione oggettiva, mai inventate, mai numeri di pagina.
 - Codice/espressioni: inline con backtick; blocchi con ` ```typst ` (o linguaggio reale) non indentati. `raw` è a 6.4pt per stare nella colonna: spezza le righe lunghe (~62 caratteri max), senza alterare il contenuto.
@@ -83,7 +84,7 @@ Vincoli dei pattern:
 Dipende dal **contenuto**, non dal numero di slide — slide vuote/foto non contano, slide dense (definizioni, elenchi, formule, tabelle, figure) sì.
 - A parità di contenuto → lunghezza comparabile.
 - Indicativo: ~3–5 pagine A4 a due colonne per lezione media; 6–8 se molto densa; 2–3 se poco tecnica. Sono indizi, non vincoli.
-- Vincolo reale: **zero contenuto perso** — tutte le definizioni, elenchi, formule, tabelle, figure devono comparire integralmente.
+- Vincolo reale: **zero contenuto in-scope perso** — tutte le definizioni, elenchi, formule, tabelle, figure in-scope devono comparire integralmente.
 - Non gonfiare per raggiungere pagine, non tagliare per rientrare in un rapporto: unica misura è il contenuto.
 - Non forzare la compressione se, dopo la compressione, resta un solo paragrafo/blocco isolato in una nuova pagina: accetta la pagina in più invece di tagliare contenuto o comprimere oltre.
 
