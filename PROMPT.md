@@ -55,6 +55,8 @@ Fedeltà: la slide renderizzata è la fonte di verità, l'estrazione testuale è
 
 Attenzione all'ambiente: l'output dei tool può essere redatto o alterato. Prima di dichiarare corrotta un'estrazione, verifica con una rappresentazione alternativa (render, `od`, lunghezza del valore): non concludere da un singolo output testuale.
 
+**Economia di lettura visiva**: i render sono costosi. Leggi i contact sheet una sola volta; per le pagine solo-testo usa `_estrazione_raw.txt`. Renderizza solo le pagine con tabelle/figure da verificare, a bassa risoluzione (110–130 dpi) in ricognizione e 150–200 dpi solo per etichette illeggibili; raggruppa più pagine in un unico comando. Non ri-leggere immagini già analizzate. Dopo la compilazione non rileggere il PDF pagina per pagina: usa `qa.sh` e al più 1–2 render di controllo mirati.
+
 **Path assoluti**: tutti i comandi usano path assoluti. Radice repo = `/workspace`. Vietato `../` e path relativi nei comandi (soprattutto verso `/workspace/tools/` e verso l'output). I placeholder `<corso>`/`<lezione>` restano, ma sempre dentro path assoluti: `/workspace/lectures/<corso>/source/<lezione>/` e `/workspace/lectures/<corso>/<corso>-<lezione>.pdf`.
 
 # PROCEDURA
@@ -69,12 +71,12 @@ Attenzione all'ambiente: l'output dei tool può essere redatto o alterato. Prima
 ## 1. Estrazione
 Scaffold automatico: `bash /workspace/tools/estrai.sh /workspace/lectures/<corso>/source/<lezione>` → `_estrazione_raw.txt` (testo pagina per pagina di tutti i PDF in ordine naturale) + `build/sheet-*.png`. In alternativa, manuale:
 `for p in $(seq 1 $N); do echo "=== PAGE $p ==="; pdftotext -layout -nopgbrk -f $p -l $p "<pdf>" -; done`
-Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR, marcato `DA VERIFICARE`. **Verifica visiva obbligatoria**: per codice, comandi, formule, identificatori, numeri, tabelle ed etichette di figure trascrivi dal render (contact sheet; render mirato a 150–200 dpi se illeggibile). **Solo in caso di dubbio estremo** (testo sospetto, valori che paiono alterati, scansione, PDF cifrato) attiva il cross-check OCR con `bash /workspace/tools/estrai.sh --ocr /workspace/lectures/<corso>/source/<lezione>`: confronta `pdftotext` con `tesseract` e scrive `_crosscheck.txt` elencando `solo testo` (token del layer assenti nel render). Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo.
+Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR, marcato `DA VERIFICARE`. **Verifica visiva obbligatoria**: per codice, comandi, formule, identificatori, numeri, tabelle ed etichette di figure trascrivi dal render (contact sheet; render mirato a 150–200 dpi se illeggibile). **Solo in caso di dubbio estremo** (testo sospetto, valori che paiono alterati, scansione, PDF cifrato) attiva il cross-check OCR con `bash /workspace/tools/estrai.sh --ocr /workspace/lectures/<corso>/source/<lezione>`: confronta `pdftotext` con `tesseract` e scrive `_crosscheck.txt` elencando `solo testo` (token del layer assenti nel render). Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo. Le firme degli helper sono in `STYLE.md`.
 
 ## 2. Figure
 Leggi `build/sheet-*.png` (9 pagine/foglio) per la ricognizione visiva. Se un'etichetta è illeggibile, render mirato **solo per leggere**: `pdftoppm -r 150 -f P -l P "<pdf>" build/pg`; in alternativa `mutool draw -F stext -o - "<pdf>" P`. Non salvare ritagli come figure.
 
-Tutte le figure vanno **ridisegnate in Typst** (niente `image("*.png|jpg")`, screenshot, foto). Usa i pacchetti di `STYLE.md` — oppure i pattern di `STYLE.md`. Stesse etichette e struttura del PDF.
+Tutte le figure vanno **ridisegnate in Typst** (niente `image("*.png|jpg")`, screenshot, foto). Usa i pacchetti di `STYLE.md` — oppure i pattern di `STYLE.md`. Stesse etichette e struttura del PDF. Riusa il pattern di numerazione di `STYLE.md`.
 
 Se non puoi vedere l'originale: ridisegna lo schema dalle etichette/struttura testuali estratte; se mancano info, usa come didascalia solo il testo che le slide associano alla figura. Non descrivere ciò che non hai visto.
 
@@ -111,6 +113,7 @@ Se durante la lezione ricavi un pattern di figura/struttura **generale e testato
 
 # CHECKLIST
 - Tutte le pagine lette; pagine scartate elencate nel report.
+- Lettura visiva economica: contact sheet una volta, render mirati solo per tabelle/figure, nessuna ri-lettura.
 - Comandi con path assoluti (nessun `../` / path relativo).
 - Contact sheet (`build/sheet-*.png`) usati per le figure; render mirati solo se illeggibili.
 - Nome file conforme, zeri inclusi.

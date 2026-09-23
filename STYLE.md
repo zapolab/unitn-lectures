@@ -43,9 +43,15 @@ Il layout è definito una volta in `/workspace/tools/preamble.typ` (colori, page
 
 `doc` applica al body tutte le regole di pagina/testo/heading/figure. **Non ricopiare il preamble nel `.typ`.** Niente indice/elenco argomenti iniziale: si parte diretti col contenuto.
 
-Helper esportati (dettagli e firme in `/workspace/tools/preamble.typ`):
-- `keep(body)`, `callout/keypt/defbox/warn(title, body)`, `cmp(cols, ..cells)`, `tbl(cols, head: (), ..cells)`;
-- figure/pattern: `asciifig`, `titleblock` (vedi sotto).
+Helper esportati (`preamble.typ` si copia, non si legge — non sondare le firme per tentativi):
+- `#show: doc.with(title: "…", label: "<corso>-<lezione>")`
+- `titleblock(title, sub)`
+- `keep(body)`
+- `callout(title, body)`, `keypt(title, body)`, `defbox(title, body)`, `warn(title, body)`
+- `cmp(cols, ..cells)`: `cols` è un **array di specifiche di colonna**, es. `#cmp((1fr, 1fr))[a][b]`; NON accetta interi (`#cmp(2)` → errore).
+- `tbl(ncols, head: (), ..cells)`: `ncols` intero, es. `#tbl(3, head: ([A], [B], [C]), [1], [2], [3], …)`.
+- `asciifig(text, cap)`.
+- `gb/flow/vflow/cellbox`: firma non documentata → evitare; usare `cmp`/`tbl`/`defbox`/`asciifig`.
 
 ## Pattern riutilizzabili
 Pattern canonici, testati e generali. Usali come mattoni; non reinventarli.
@@ -55,6 +61,16 @@ Pattern canonici, testati e generali. Usali come mattoni; non reinventarli.
 
 ```typst
 #asciifig("main() --ISR--> main() --> Time", [Timeline foreground/ISR.])
+```
+
+### Numerazione figure
+`asciifig` (e ogni `raw` dentro un `#figure`) usa un contatore separato da `#figure`: mescolarli duplica i numeri. In **ogni** `#figure` con diagramma fletcher/cetz aggiungi un `#raw("")` (vuoto, reso nullo) nel body, così entra nello stesso contatore:
+
+```typst
+#figure(caption: [..], [
+  #raw("")
+  #scale(72%, reflow: true)[#diagram(…)]
+])
 ```
 
 Vincoli dei pattern:
