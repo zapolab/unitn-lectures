@@ -7,7 +7,7 @@ Agente CLI non interattivo. Input:
 Output (obbligatorio):
 - `<corso>-<lezione>.typ` nella dir della lezione.
 - PDF compilato DIRETTAMENTE in `lectures/<corso>/<corso>-<lezione>.pdf`.
-- Artefatti interni (`fig/`, `build/`, `_preamble.typ`, `_estrazione.md`, `_estrazione_raw.txt`, `_mappa_concetti.md`) nella dir della lezione.
+- Artefatti interni (`build/`, `_preamble.typ`, `_estrazione.md`, `_estrazione_raw.txt`, `_mappa_concetti.md`) nella dir della lezione.
 - Non modificare/spostare/cancellare i PDF originali.
 - Nome file: solo lettere/cifre/trattini, zeri iniziali della dir lezione inclusi. `<corso>` = nome della dir che contiene `source/`; `<lezione>` = nome della dir dentro `source/`.
 
@@ -33,11 +33,10 @@ Niente riferimenti a pagine/slide nel PDF finale (né numeri, né "vedi sopra", 
 # PROCEDURA
 
 ## 0. Ricognizione
-`ls -la` nella dir lezione e `pdfinfo "<pdf>"` (pagine, dimensioni, cifratura). Verifica gli strumenti e scegli la catena di fallback: `command -v pdftotext pdfimages pdftoppm pdftocairo mutool magick convert tesseract python3 typst montage`.
+`ls -la` nella dir lezione e `pdfinfo "<pdf>"` (pagine, dimensioni, cifratura). Verifica gli strumenti: `command -v pdftotext pdftoppm pdftocairo mutool tesseract python3 typst`.
 - Testo: `pdftotext -layout` → `mutool draw -F txt` → PyMuPDF.
-- Immagini raster: `pdfimages` → PyMuPDF `page.get_images()`.
-- Render/ritagli: `pdftoppm`/`pdftocairo` → PyMuPDF `page.get_pixmap(clip=...)`; crop con ImageMagick `convert` (usare `convert`, **non** `montage`: core dump su questa build).
-- `bash tools/estrai.sh .` fa testo + contact sheet in un colpo (Fase 1).
+- Render (solo per *leggere* slide/figure, mai per produrre figure): `pdftoppm`/`pdftocairo` → PyMuPDF `page.get_pixmap()`. OCR `tesseract` solo per testo in scansioni.
+- `bash tools/estrai.sh .` fa testo + contact sheet in un colpo (Fase 1). I contact sheet sono supporto di lettura, non figure di output.
 
 ## 1. Estrazione
 Scaffold automatico: `bash tools/estrai.sh .` → `_estrazione_raw.txt` (testo pagina per pagina di tutti i PDF in ordine naturale) + `build/sheet-*.png`. In alternativa, manuale:
@@ -45,17 +44,11 @@ Scaffold automatico: `bash tools/estrai.sh .` → `_estrazione_raw.txt` (testo p
 Dove conta il layout (tabelle, colonne, elenchi) usa anche `pdftotext -bbox-layout -f $p -l $p "<pdf>" -` o `mutool draw -F stext -o - "<pdf>" $p` per l'ordine di lettura e la posizione di blocchi/etichette. PDF cifrato o scansione → render + OCR solo come ultima risorsa, marcato `DA VERIFICARE`. Costruisci `_estrazione.md` (interno) con mappa pagina↔contenuto, pagine mute, figure. Verifica che `typst` esista; se manca, produci comunque il `.typ` e segnalalo.
 
 ## 2. Figure
-Leggi `build/sheet-*.png` (9 pagine/foglio) per la ricognizione visiva delle figure. Solo se un'etichetta è illeggibile, render mirato: `pdftoppm -r 150 -f P -l P "<pdf>" build/pg` (o `convert build/pg-P.png -crop WxH+X+Y fig/zoom.png`). In alternativa ricava le etichette con `mutool draw -F stext -o - "<pdf>" P`.
+Leggi `build/sheet-*.png` (9 pagine/foglio) per la ricognizione visiva. Se un'etichetta è illeggibile, render mirato **solo per leggere**: `pdftoppm -r 150 -f P -l P "<pdf>" build/pg`; in alternativa `mutool draw -F stext -o - "<pdf>" P`. Non salvare ritagli come figure.
 
-Preferisci ridisegno Typst (grid/stack/place/rect/line/circle/polygon/curve), stesse etichette e struttura del PDF; usa i pattern di `STYLE.md`.
+Tutte le figure vanno **ridisegnate in Typst** (niente `image("*.png|jpg")`, screenshot, foto). Usa i pacchetti di `STYLE.md` — oppure i pattern di `STYLE.md`. Stesse etichette e struttura del PDF.
 
-Figure larghe/dense: `#figure(placement: top, scope: "parent", ...)` con parsimonia; `#place.flush()` prima di un cambio di sezione. Didascalia = testo slide o descrizione oggettiva, di una riga.
-
-Raster solo per contenuto intrinsecamente raster (foto, screenshot, grafici di dati reali, immagini scientifiche): `pdfimages -png -p "<pdf>" fig/p`, oppure ritaglio pagina con `pdftoppm -r 220 ... build/pg` + `convert ... -crop ... fig/i<KK>.png`, oppure PyMuPDF `page.get_pixmap(clip=fitz.Rect(...), dpi: 220)`. Salva in `fig/i<KK>.png` (progressivo, niente pagina nel nome), ritaglia solo l'area utile (niente bordi bianchi), DPI 220–300 se c'è testo/etichette piccole. Niente contenuto inventato, niente numeri di pagina, niente emoji/Unicode esotico.
-
-ASCII art solo per strutture semplici (alberi, timeline, flusso 3–5 nodi), larghezza max ~56 caratteri, in `#raw("...", block: true)` o `#asciifig(...)`, derivata dal PDF.
-
-Se non puoi vedere le immagini: ridisegna lo schema dalle etichette/struttura testuali estratte; se mancano info, ritaglia e usa come didascalia solo il testo che le slide associano alla figura. Non descrivere ciò che non hai visto.
+Se non puoi vedere l'originale: ridisegna lo schema dalle etichette/struttura testuali estratte; se mancano info, usa come didascalia solo il testo che le slide associano alla figura. Non descrivere ciò che non hai visto.
 
 ## 3. Antidup
 `_mappa_concetti.md`: `concetto | dove | sezione | stato`. Un concetto = una sezione. Se ricompare con info nuove → sotto-blocco `=== Approfondimento: <aspetto>` nella prima sezione; se è ripetizione → nessun nuovo blocco, eventualmente `#link(<sec>)[vedi §...]`. Non riordinare i divider: la prima occorrenza resta dove sta.
@@ -67,8 +60,9 @@ Segui `STYLE.md` per vincoli tecnici, layout, pattern, stile e criteri di lunghe
 ```typst
 #import "_preamble.typ": *
 #show: doc.with(title: "<TITOLO LEZIONE>", label: "<corso>-<lezione>")
+#titleblock("<TITOLO LEZIONE>", "<corso> — Lezione <n>")
 ```
-Non ricopiare il preamble nel `.typ`; usa gli helper (`cmp/tbl/callout/defbox/keypt/warn`, `gb/flow/vflow/cellbox/asciifig/titleblock`).
+`#titleblock` è obbligatorio. Importa i pacchetti `@preview` necessari (lista in `STYLE.md`). Non ricopiare il preamble nel `.typ`; usa gli helper (`cmp/tbl/callout/defbox/keypt/warn`, `gb/flow/vflow/cellbox/asciifig/titleblock`).
 
 Ordine sezioni = ordine dei divider del PDF; == macro-argomento, === concetto.
 Stile telegrafico completo, zero riempitivi.
@@ -94,7 +88,7 @@ Se durante la lezione ricavi un pattern di figura/struttura **generale e testato
 - Preamble importato da `_preamble.typ` (non ricopiato).
 - Nessun riferimento a pagine/slide (`grep -nE 'p\. [0-9]|slide [0-9]|pag\. [0-9]'`).
 - Nessun titolo duplicato.
-- Ogni `fig/...` referenziato esiste; nessun orfano.
+- Nessuna immagine raster nel `.typ` (solo figure vettoriali Typst).
 - Zero contenuto esterno al PDF o amministrativo.
 - Nessun blocco spezzato; nessun paragrafo orfano di 1–2 righe a fondo colonna.
 - Nessuna tabella a griglia completa: `#cmp`/`#tbl` con soli filetti orizzontali.

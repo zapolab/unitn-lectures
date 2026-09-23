@@ -1,9 +1,33 @@
 # SCRITTURA DEL FILE TYPST
 
 ## Vincoli tecnici
-- Typst ≥0.12 (target 0.15.x). **Offline**: niente `#import "@preview/..."`, solo Typst standard.
+- Typst 0.15.x. **Online**: si usano i pacchetti `@preview` (versione pinnata esatta); il primo `compile` li scarica, poi restano in cache. Import nel `.typ` della lezione, non nel preamble.
 - Font ammessi (CLI embedded): `New Computer Modern`, `New Computer Modern Math`, `DejaVu Sans Mono`, `Libertinus Serif`. Niente emoji/Unicode esotico → simboli matematici sempre in math mode (`$arrow.r$`, `$alpha$`, ecc.).
 - Nessun testo/commento fuori dal `.typ`.
+- **Figure sempre vettoriali Typst** (pattern o pacchetti).
+
+## Pacchetti consigliati
+Elenco per evitare fetch ripetuti. Pinna la versione; sintassi/opzioni: usare la manualistica citata solo se serve.
+
+| pacchetto | versione | cosa fa | import |
+|-----------|----------|---------|--------|
+| `fletcher` | 0.5.8 | diagrammi nodi+archi: flowchart, architetture, state machine, UML, alberi; archi/etichette automatici | `#import "@preview/fletcher:0.5.8": diagram, node, edge` |
+| `cetz` | 0.5.2 | disegno vettoriale stile TikZ: canvas, linee, forme, grafi custom | `#import "@preview/cetz:0.5.2"` |
+| `cetz-plot` | 0.1.4 | grafici di dati (line/bar/scatter) su cetz | `#import "@preview/cetz-plot:0.1.4"` |
+| `tablex` | 0.0.9 | tabelle avanzate: celle unite, allineamenti, spezzabili (evita i salti-pagina dei `keep`) | `#import "@preview/tablex:0.0.9": tablex, cellx, rowspanx, colspanx` |
+| `lovelace` | 0.3.1 | pseudocodice/algoritmi | `#import "@preview/lovelace:0.3.1": *` |
+| `showybox` | 2.0.4 | box stilizzati (oltre a `defbox/keypt`) | `#import "@preview/showybox:2.0.4": showybox` |
+
+Pattern fletcher per architetture/flowchart (scalato dentro la colonna):
+```typst
+#import "@preview/fletcher:0.5.8": diagram, node, edge
+#scale(75%, reflow: true)[#figure(caption: [..], diagram(
+  node-stroke: 0.7pt + rgb("#1B4965"), edge-stroke: 0.8pt + rgb("#2E7D32"), spacing: 1.4em,
+  node((0,0), fill: rgb("#2E9E28"))[Start],          // nodo
+  node((1,0), [Decision]),
+  edge((0,0), (1,0), "->", [label]),                 // arco diretto
+))]
+```
 
 ## Layout: A4, due colonne, massima densità
 Il layout è definito una volta in `tools/preamble.typ` (colori, page A4 2 colonne, font, heading, callout, tabelle, figure). Nella dir lezione:
@@ -13,7 +37,7 @@ Il layout è definito una volta in `tools/preamble.typ` (colori, page A4 2 colon
 ```typst
 #import "_preamble.typ": *
 #show: doc.with(title: "<TITOLO LEZIONE>", label: "<corso>-<lezione>")
-#titleblock("<TITOLO LEZIONE>", "<corso> — Lezione <n>")   // opzionale
+#titleblock("<TITOLO LEZIONE>", "<corso> — Lezione <n>")
 ```
 
 `doc` applica al body tutte le regole di pagina/testo/heading/figure. **Non ricopiare il preamble nel `.typ`.** Niente indice/elenco argomenti iniziale: si parte diretti col contenuto.
@@ -39,7 +63,9 @@ Pattern canonici, testati e generali. Usali come mattoni per i diagrammi; non re
 ```
 
 Vincoli dei pattern:
-- ASCII solo per strutture semplici (alberi, timeline, flusso 3–5 nodi), larghezza max ~56 caratteri, derivata dal PDF.
+- Diagrammi/grafi complessi (architetture, flowchart, alberi, UML): usare `fletcher` (o `cetz`), niente coordinate assolute a mano.
+- Diagramma più largo della colonna: avvolgilo in `#scale(75%, reflow: true)[#figure(...)]`.
+- ASCII solo per strutture semplici (alberi, timeline, flusso 3–5 nodi), larghezza max ~56 caratteri, in `#raw("...", block: true)` o `#asciifig(...)`, derivata dal PDF.
 - griglie/buffer: `grid(columns: range(n).map(_ => 1fr), column-gutter: 0pt, ..cells.map(cellbox))`.
 - etichette/frecce: stesse del PDF; nessun contenuto inventato.
 - **Nuovi pattern**: se durante una lezione ne emerge uno generale e verificato (compile pulita), aggiungilo a questo elenco con firma + un esempio, senza duplicare quelli esistenti.
