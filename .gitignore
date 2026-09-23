@@ -1,5 +1,6 @@
 .env
 build
+fig
 _preamble.typ
 _estrazione_raw.txt
 _crosscheck.txt
