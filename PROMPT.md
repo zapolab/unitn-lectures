@@ -38,7 +38,7 @@ Fonte unica = PDF. Non aggiungere né completare con conoscenze tue o dal web: o
 
 Ambito di lettura consentito = ristretto. NON sei libero di girare le directory: non esplorare né leggere nulla fuori da `lectures/<corso>/source/<lezione>/`. NON usare `git` (log, storia, diff, show) per ricavare istruzioni, preamble, struttura o contenuto. Gli unici file che ti è consentito leggere e utilizzare sono:
 - `PROMPT.md` e `STYLE.md` (le regole);
-- gli strumenti condivisi in `/workspace/tools/` (sola lettura/esecuzione: `/workspace/tools/preamble.typ`, `/workspace/tools/estrai.sh`, `/workspace/tools/qa.sh`);
+- gli strumenti condivisi in `/workspace/tools/`: `estrai.sh` e `qa.sh` si **eseguono**, `preamble.typ` si **copia**; non si leggono. Il loro comportamento non ti interessa, utilizzali seguendo la PROCEDURA;
 - il/i PDF sorgente presenti nella sola directory della lezione corrente;
 - tutti i file e le directory dentro `lectures/<corso>/source/<lezione>/`.
 
@@ -62,6 +62,7 @@ Attenzione all'ambiente: l'output dei tool può essere redatto o alterato. Prima
 ## 0. Ricognizione
 `ls -la` nella dir lezione e `pdfinfo "<pdf>"` (pagine, dimensioni, cifratura). Verifica gli strumenti: `command -v pdftotext pdftoppm pdftocairo mutool tesseract python3 typst`.
 - Testo: `pdftotext -layout` → `mutool draw -F txt` → PyMuPDF.
+- `mutool draw -F stext` (bbox/ordine di lettura) solo quando necessario e limitato alle pagine/aree rilevanti: mai su pagine intere.
 - Render (solo per *leggere* slide/figure, mai per produrre figure): `pdftoppm`/`pdftocairo` → PyMuPDF `page.get_pixmap()`. OCR `tesseract` solo in caso di dubbi estremi (cross-check manuale) o per testo in scansioni.
 - `bash /workspace/tools/estrai.sh /workspace/lectures/<corso>/source/<lezione>` fa testo + contact sheet in un colpo (Fase 1). I contact sheet sono supporto di lettura, non figure di output.
 
