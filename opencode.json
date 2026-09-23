@@ -10,9 +10,12 @@
   "permission": {
     "read": {
       "*": "allow",
+      "../*": "deny",
+      "**/../*": "deny",
+      "/*": "deny",
       "*.env": "deny",
       "*.env.*": "deny",
-      "*.env.example": "allow"
+      "*.env.example": "allow"  
     }
   }
 }
