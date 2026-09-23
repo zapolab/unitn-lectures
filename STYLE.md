@@ -111,6 +111,10 @@ Vincoli dei pattern:
 - Lingua del riassunto = lingua delle slide; terminologia tecnica resta nella lingua originale (di norma inglese), mai tradotta.
 - Didascalie figure: dal PDF o descrizione oggettiva, mai inventate, mai numeri di pagina.
 - Codice/espressioni: inline con backtick; blocchi con ` ```typst ` (o linguaggio reale) non indentati. `raw` è a 6.4pt per stare nella colonna: spezza le righe lunghe (~62 caratteri max), senza alterare il contenuto.
+- **Formule**: quelle che non stanno nella colonna si spezzano su più righe, senza alterare il contenuto.
+  - Display math: spezza ai segni (`=`, `+`, `-`, `times`, `dot`, `,`) con `\` a fine riga; usa `&` per allineare le continuazioni al segno (es. `$ a &= b \ &= c $`). Una catena `A = B = C` troppo larga va spezzata in più righe.
+  - Inline math: le frazioni con `/` sono alte/larghe e collidono col testo → usa `slash` (es. `$m (m - 1) slash 2$`) o metti la formula su una riga propria.
+  - `cases(...)`: le voci si separano con **virgole** (una voce = una riga); senza virgole collassano in un'unica riga troppo larga.
 
 ## Lunghezza (compressione)
 Dipende dal **contenuto**, non dal numero di slide — slide vuote/foto non contano, slide dense (definizioni, elenchi, formule, tabelle, figure) sì.
