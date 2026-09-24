@@ -1,38 +1,26 @@
 # SCRITTURA DEL FILE TYPST
 
 ## Vincoli tecnici
-- Typst 0.15.x. **Online**: si usano i pacchetti `@preview` (versione pinnata esatta); il primo `compile` li scarica, poi restano in cache. Import nel `.typ` della lezione, non nel preamble.
-- **Path assoluti**: tutti i comandi usano path assoluti; radice repo `/workspace`. Vietato `../` e path relativi.
+- Typst 0.15.x. Pacchetti `@preview` (versione pinnata esatta): il primo `compile` li scarica, poi restano in cache. Import nel `.typ` della lezione, non nel preamble.
 - Font ammessi (CLI embedded): `New Computer Modern`, `New Computer Modern Math`, `DejaVu Sans Mono`, `Libertinus Serif`. Niente emoji/Unicode esotico → simboli matematici sempre in math mode (`$arrow.r$`, `$alpha$`, ecc.).
 - Nessun testo/commento fuori dal `.typ`.
-- **Figure sempre vettoriali Typst** (pattern o pacchetti).
+- **Figure sempre vettoriali Typst** (pattern o pacchetti); niente raster.
 
 ## Pacchetti consigliati
-Elenco per evitare fetch ripetuti. Pinna la versione; sintassi/opzioni: usare la manualistica citata solo se serve.
+Elenco per evitare fetch ripetuti. Pinna la versione; sintassi/opzioni: manualistica solo se serve.
 
 | pacchetto | versione | cosa fa | import |
 |-----------|----------|---------|--------|
-| `fletcher` | 0.5.8 | diagrammi nodi+archi: flowchart, architetture, state machine, UML, alberi; archi/etichette automatici | `#import "@preview/fletcher:0.5.8": diagram, node, edge` |
+| `fletcher` | 0.5.8 | diagrammi nodi+archi: flowchart, architetture, state machine, UML, alberi | `#import "@preview/fletcher:0.5.8": diagram, node, edge` |
 | `cetz` | 0.5.2 | disegno vettoriale stile TikZ: canvas, linee, forme, grafi custom | `#import "@preview/cetz:0.5.2"` |
 | `cetz-plot` | 0.1.4 | grafici di dati (line/bar/scatter) su cetz | `#import "@preview/cetz-plot:0.1.4"` |
-| `tablex` | 0.0.9 | tabelle avanzate: celle unite, allineamenti, spezzabili (evita i salti-pagina dei `keep`) | `#import "@preview/tablex:0.0.9": tablex, cellx, rowspanx, colspanx` |
+| `tablex` | 0.0.9 | tabelle avanzate: celle unite, allineamenti, spezzabili | `#import "@preview/tablex:0.0.9": tablex, cellx, rowspanx, colspanx` |
 | `lovelace` | 0.3.1 | pseudocodice/algoritmi | `#import "@preview/lovelace:0.3.1": *` |
 | `showybox` | 2.0.4 | box stilizzati (oltre a `defbox/keypt`) | `#import "@preview/showybox:2.0.4": showybox` |
 
-Pattern fletcher per architetture/flowchart (scalato dentro la colonna):
-```typst
-#import "@preview/fletcher:0.5.8": diagram, node, edge
-#scale(75%, reflow: true)[#figure(caption: [..], diagram(
-  node-stroke: 0.7pt + rgb("#1B4965"), edge-stroke: 0.8pt + rgb("#2E7D32"), spacing: 1.4em,
-  node((0,0), fill: rgb("#2E9E28"))[Start],          // nodo
-  node((1,0), [Decision]),
-  edge((0,0), (1,0), "->", [label]),                 // arco diretto
-))]
-```
-
 ## Layout: A4, due colonne, massima densità
-Il layout è definito una volta in `/workspace/tools/preamble.typ` (colori, page A4 2 colonne, font, heading, callout, tabelle, figure). Nella dir lezione:
-1. copia `cp /workspace/tools/preamble.typ /workspace/lectures/<corso>/source/<lezione>/_preamble.typ`;
+Definito in `/workspace/tools/preamble.typ`. Nella dir lezione:
+1. `cp /workspace/tools/preamble.typ /workspace/lectures/<corso>/source/<lezione>/_preamble.typ`;
 2. in testa al `.typ`:
 
 ```typst
@@ -41,98 +29,101 @@ Il layout è definito una volta in `/workspace/tools/preamble.typ` (colori, page
 #titleblock("<TITOLO LEZIONE>", "<corso> — Lezione <n>")
 ```
 
-`doc` applica al body tutte le regole di pagina/testo/heading/figure. **Non ricopiare il preamble nel `.typ`.** Niente indice/elenco argomenti iniziale: si parte diretti col contenuto.
+`doc` applica page/testo/heading/figure. **Non ricopiare il preamble.** Niente indice iniziale: si parte dal contenuto.
 
-Helper esportati (`preamble.typ` si copia, non si legge — non sondare le firme per tentativi):
-- `#show: doc.with(title: "…", label: "<corso>-<lezione>")`
-- `titleblock(title, sub)`
-- `keep(body)`
-- `callout(title, body)`, `keypt(title, body)`, `defbox(title, body)`, `warn(title, body)`
-- `cmp(cols, ..cells)`: `cols` è un **array di specifiche di colonna**, es. `#cmp((1fr, 1fr))[a][b]`; NON accetta interi (`#cmp(2)` → errore).
-- `tbl(ncols, head: (), ..cells)`: `ncols` intero, es. `#tbl(3, head: ([A], [B], [C]), [1], [2], [3], …)`.
-- `asciifig(text, cap)`.
-- `gb/flow/vflow/cellbox`: firma non documentata → evitare; usare `cmp`/`tbl`/`defbox`/`asciifig`.
+## Helper (firma + esempio)
+Il preamble si copia, non si legge: qui ci sono tutte le firme. Non sondarle per tentativi.
+
+- `doc.with(title: "…", label: "<corso>-<lezione>")` — applica il layout al body.
+- `titleblock(title, sub)` — blocco titolo a piena larghezza, obbligatorio in cima.
+  ```typst
+  #titleblock("Reti di calcolatori", "RETI — Lezione 3")
+  ```
+- `keep(body)` — rende indivisibile un blocco (usalo su elenchi/paragrafi brevi a rischio taglio).
+  ```typst
+  #keep[#list([primo], [secondo])]
+  ```
+- `callout(title, body)` / `keypt(title, body)` / `defbox(title, body)` / `warn(title, body)` — box colorati.
+  ```typst
+  #defbox("Definizione", [Un automa è …])
+  #warn("DA VERIFICARE", [valore illeggibile, p. 12])
+  ```
+- `cmp(cols, ..cells)` — confronto a griglia, prima cella di ogni riga in grassetto. `cols` è un **array** di specifiche di colonna; è tollerato anche un intero = N colonne `1fr`.
+  ```typst
+  #cmp((1fr, 1fr))[Protocollo][TCP][UDP][Affidabile][Sì][No]
+  #cmp(2)[A][B][C][D]        // forma breve, 2 colonne
+  ```
+- `tbl(ncols, head: (), ..cells)` — tabella con intestazione (riga di testa su sfondo).
+  ```typst
+  #tbl(3, head: ([Nome], [Tipo], [Uso]), [TCP], [stream], [web], [UDP], [datagram], [realtime])
+  ```
+- `asciifig(text, cap)` — figura ASCII (solo strutture semplici, max ~56 caratteri di larghezza).
+  ```typst
+  #asciifig("main() --ISR--> main() --> Time", [Timeline foreground/ISR.])
+  ```
 
 ## Pattern riutilizzabili
-Pattern canonici, testati e generali. Usali come mattoni; non reinventarli.
+Mattoni canonici, testati. Usali; non reinventarli.
 
-- `asciifig(text, cap)` — figura ASCII: `raw(text, block: true)` + didascalia di una riga.
-- `titleblock(title, sub)` — blocco titolo a piena larghezza in cima.
-
-```typst
-#asciifig("main() --ISR--> main() --> Time", [Timeline foreground/ISR.])
-```
-
-- `proj`/`triad`/`arc3` — frame 3D (assi $x,y,z$) in proiezione isometrica su `cetz`, per geometria/robotica. Definire gli helper locali alla lezione (v. esempio) e disegnare dentro `canvas`. `arc3(axis, start, ang, r)` genera i punti di un arco di rotazione; `triad(o, ex, ey, ez, lx, ly, lz, c:, dash:, len:)` disegna un triedro con etichette.
-
-```typst
-#let proj(p) = ((p.at(0) - p.at(1)) * 0.82, p.at(2) - (p.at(0) + p.at(1)) * 0.42)
-#let triad(o, ex, ey, ez, lx, ly, lz, c: black, dash: none, len: 1.0) = {
-  let oo = proj(o)
-  let st = if dash == none { (stroke: c, mark: (end: ">", fill: c)) }
-           else { (stroke: (paint: c, dash: dash), mark: (end: ">", fill: c)) }
-  draw.line(oo, proj(vadd(o, smul(len, ex))), ..st) // idem per ey, ez
-  draw.content(proj(vadd(o, smul(len * 1.16, ex))), lx, fill: c) // idem ly, lz
-}
-#canvas({ triad((0,0,0), (2,0,0), (0,2,0), (0,0,2), $x_0$, $y_0$, $z_0$)
-           draw.line(..arc3((0,0,1), (1,0,0), 40deg, 0.7), mark: (end: ">")) })
-```
+- `asciifig(text, cap)` — `raw(text, block: true)` + didascalia di una riga.
+- `titleblock(title, sub)` — v. sopra.
+- **fletcher** per architetture/flowchart (scalato dentro la colonna):
+  ```typst
+  #import "@preview/fletcher:0.5.8": diagram, node, edge
+  #scale(75%, reflow: true)[#figure(caption: [..], diagram(
+    node-stroke: 0.7pt + rgb("#1B4965"), edge-stroke: 0.8pt + rgb("#2E7D32"), spacing: 1.4em,
+    node((0,0), fill: rgb("#2E9E28"))[Start],
+    node((1,0), [Decision]),
+    edge((0,0), (1,0), "->", [label]),
+  ))]
+  ```
+- `proj`/`triad`/`arc3` — frame 3D isometrico su `cetz` per geometria/robotica; helper locali alla lezione.
+  ```typst
+  #let proj(p) = ((p.at(0) - p.at(1)) * 0.82, p.at(2) - (p.at(0) + p.at(1)) * 0.42)
+  #let triad(o, ex, ey, ez, lx, ly, lz, c: black, dash: none, len: 1.0) = {
+    let oo = proj(o)
+    let st = if dash == none { (stroke: c, mark: (end: ">", fill: c)) }
+             else { (stroke: (paint: c, dash: dash), mark: (end: ">", fill: c)) }
+    draw.line(oo, proj(vadd(o, smul(len, ex))), ..st)
+    draw.content(proj(vadd(o, smul(len * 1.16, ex))), lx, fill: c)
+  }
+  #canvas({ triad((0,0,0), (2,0,0), (0,2,0), (0,0,2), $x_0$, $y_0$, $z_0$)
+             draw.line(..arc3((0,0,1), (1,0,0), 40deg, 0.7), mark: (end: ">")) })
+  ```
+- Diagrammi/grafi complessi (architetture, flowchart, alberi, UML): `fletcher`/`cetz`, niente coordinate assolute a mano. Diagramma più largo della colonna → `#scale(75%, reflow: true)[#figure(...)]`.
+- Etichette/frecce: stesse del PDF; nessun contenuto inventato.
 
 ### Numerazione figure
-`asciifig` (e ogni `raw` dentro un `#figure`) usa un contatore separato da `#figure`: mescolarli duplica i numeri. In **ogni** `#figure` con diagramma fletcher/cetz aggiungi un `#raw("")` (vuoto, reso nullo) nel body, così entra nello stesso contatore:
-
+`asciifig` (e ogni `raw` dentro un `#figure`) usa un contatore separato da `#figure`: mescolarli duplica i numeri. In **ogni** `#figure` con fletcher/cetz aggiungi un `#raw("")` (vuoto) nel body, così entra nello stesso contatore:
 ```typst
-#figure(caption: [..], [
-  #raw("")
-  #scale(72%, reflow: true)[#diagram(…)]
-])
+#figure(caption: [..], [#raw("") #scale(72%, reflow: true)[#diagram(…)]])
 ```
-
-Vincoli dei pattern:
-- Diagrammi/grafi complessi (architetture, flowchart, alberi, UML): usare `fletcher` (o `cetz`), niente coordinate assolute a mano.
-- Diagramma più largo della colonna: avvolgilo in `#scale(75%, reflow: true)[#figure(...)]`.
-- ASCII solo per strutture semplici (alberi, timeline, flusso 3–5 nodi), larghezza max ~56 caratteri, in `#raw("...", block: true)` o `#asciifig(...)`, derivata dal PDF.
-- etichette/frecce: stesse del PDF; nessun contenuto inventato.
-- **Nuovi pattern**: se durante una lezione ne emerge uno generale e verificato (compile pulita), aggiungilo a questo elenco con firma + un esempio, senza duplicare quelli esistenti.
 
 ## Struttura del contenuto
 - Segui la struttura delle slide (titoli capitolo → `=`/`==`); non inventare organizzazione.
-- **Ordine = ordine dei divider del PDF.** Non riorganizzare per tema, non anticipare capitoli. Eccezione: antidup (Fase 3) — dettagli nuovi su concetti già visti si accodano alla sezione originale, senza spostare interi capitoli.
-- `==` macro-argomento, `===` concetto puntuale, senza riferimenti di pagina.
-- Un concetto per sezione; dettagli aggiuntivi trovati dopo → si accodano.
-- Stile **telegrafico completo**: zero riempitivi ("in questa slide...", "come già detto"), frasi brevi/frammenti ok, niente ripetizione del titolo nel corpo.
-- `#defbox` → definizioni/teoremi/formule chiave, testo il più fedele possibile alle slide.
-- `#keypt` → solo se le slide stesse evidenziano attenzione/errori tipici/punti d'esame (non aggiungerne di tua iniziativa).
-- `#cmp`/`#tbl` → confronti, classificazioni, cicli (più compatti di elenchi puntati).
-- Parti di presentazione/amministrazione del corso (docenti, orari, voti, FAQ): non riassumerle, non farle comparire.
-- Elenchi delle slide: conservati integralmente per la parte **in-scope** (v. `PROMPT.md` §Definizioni), compressi ma non tagliati; gli elementi amministrativi si omettono.
-- Numeri, formule, unità, notazione, nomi: copiati esatti. Dubbi → `#warn([DA VERIFICARE], ...)`.
-- Trascrizione: quando il layer testuale diverge dal render, trascrivi dal render (fonte di verità); codice, comandi, formule e tabelle sempre verificati a vista.
-- Lingua del riassunto = lingua delle slide; terminologia tecnica resta nella lingua originale (di norma inglese), mai tradotta.
+- **Ordine = ordine dei divider del PDF**; eccezione: antidup (Fase 3) — i dettagli nuovi su concetti già visti si accodano alla sezione originale, senza spostare capitoli.
+- `==` macro-argomento, `===` concetto puntuale, senza riferimenti di pagina. Un concetto per sezione.
+- Stile **telegrafico completo**: zero riempitivi ("in questa slide...", "come già detto"), frammenti ok, niente ripetizione del titolo nel corpo.
+- `#defbox` → definizioni/teoremi/formule chiave, fedeli alle slide; `#keypt` → solo se le slide evidenziano attenzione/errori/punti d'esame; `#cmp`/`#tbl` → confronti/classificazioni/cicli (più compatti degli elenchi).
+- Elenchi: integrali per la parte **in-scope** (v. `PROMPT.md` §Definizioni), compressi ma non tagliati.
+- Codice/espressioni: inline con backtick; blocchi con ` ```typst ` (o linguaggio reale) non indentati. `raw` è a 6.4pt: spezza le righe lunghe (~62 caratteri max), senza alterare il contenuto.
 - Didascalie figure: dal PDF o descrizione oggettiva, mai inventate, mai numeri di pagina.
-- Codice/espressioni: inline con backtick; blocchi con ` ```typst ` (o linguaggio reale) non indentati. `raw` è a 6.4pt per stare nella colonna: spezza le righe lunghe (~62 caratteri max), senza alterare il contenuto.
-- **Formule**: quelle che non stanno nella colonna si spezzano su più righe, senza alterare il contenuto.
-  - Display math: spezza ai segni (`=`, `+`, `-`, `times`, `dot`, `,`) con `\` a fine riga; usa `&` per allineare le continuazioni al segno (es. `$ a &= b \ &= c $`). Una catena `A = B = C` troppo larga va spezzata in più righe.
-  - Inline math: le frazioni con `/` sono alte/larghe e collidono col testo → usa `slash` (es. `$m (m - 1) slash 2$`) o metti la formula su una riga propria.
-  - `cases(...)`: le voci si separano con **virgole** (una voce = una riga); senza virgole collassano in un'unica riga troppo larga.
 
 ## Lunghezza (compressione)
-Dipende dal **contenuto**, non dal numero di slide — slide vuote/foto non contano, slide dense (definizioni, elenchi, formule, tabelle, figure) sì.
-- A parità di contenuto → lunghezza comparabile.
-- Indicativo: ~3–5 pagine A4 a due colonne per lezione media; 6–8 se molto densa; 2–3 se poco tecnica. Sono indizi, non vincoli.
-- Vincolo reale: **zero contenuto in-scope perso** — tutte le definizioni, elenchi, formule, tabelle, figure in-scope devono comparire integralmente.
-- Non gonfiare per raggiungere pagine, non tagliare per rientrare in un rapporto: unica misura è il contenuto.
-- Non forzare la compressione se, dopo la compressione, resta un solo paragrafo/blocco isolato in una nuova pagina: accetta la pagina in più invece di tagliare contenuto o comprimere oltre.
+Dipende dal **contenuto**, non dal numero di slide: slide vuote/foto non contano, slide dense (definizioni, elenchi, formule, tabelle, figure) sì.
+- A parità di contenuto → lunghezza comparabile. Indicativo: ~3–5 pagine A4 a due colonne per lezione media; 6–8 se molto densa; 2–3 se poco tecnica. Indizi, non vincoli.
+- Vincolo reale: **zero contenuto in-scope perso**. Non gonfiare, non tagliare per rientrare in un rapporto.
+- Non forzare la compressione se resta un solo paragrafo isolato in una nuova pagina: accetta la pagina in più.
 
 Come comprimere:
-- fondi punti quasi sinonimi in un unico punto con sotto-voci separate da `;`;
+- fondi punti quasi sinonimi con sotto-voci separate da `;`;
 - preferisci `#cmp`/`#tbl` a elenchi per confronti/proprietà;
-- elimina connettivi discorsivi e ripetizioni del titolo;
+- elimina connettivi e ripetizioni del titolo;
 - `===` solo se il concetto ha contenuto autonomo reale;
-- `#defbox`/`#keypt` solo dove le slide li giustificano (costosi in spazio);
+- `#defbox`/`#keypt` solo dove le slide li giustificano;
 - figure ridisegnate, larghezza colonna, didascalia di una riga.
 
 Per evitare spezzoni:
-- tabelle/box/figure sono già indivisibili (`keep`) — non stiparci contenuto che non entra, lascia slittare il blocco intero;
-- avvolgi in `#keep(...)` anche elenchi/paragrafi brevi (≤4 righe) a rischio taglio a fondo colonna;
-- non usare `#keep` su blocchi alti quanto una colonna intera (creerebbe buchi bianchi) — in quel caso dividi tu il contenuto in blocchi più piccoli e coerenti.
+- tabelle/box/figure sono già indivisibili (`keep`): non stiparci contenuto che non entra, lascia slittare il blocco intero;
+- avvolgi in `#keep(...)` elenchi/paragrafi brevi (≤4 righe) a rischio taglio;
+- non usare `#keep` su blocchi alti quanto una colonna (creerebbe buchi bianchi): dividi tu in blocchi più piccoli e coerenti.
