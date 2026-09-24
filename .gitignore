@@ -3,4 +3,6 @@ build
 fig
 _preamble.typ
 _estrazione_raw.txt
+_estrazione_layout.txt
+_pagine.tsv
 _crosscheck.txt
