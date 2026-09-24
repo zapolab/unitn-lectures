@@ -25,9 +25,13 @@
 #let warn(t,b)   = callout(t,b, col: danger, bg: rgb("#FBEDED"))
 
 // ---- tabelle indivisibili, solo filetti orizzontali ----
+// cmp: `cols` è un array di specifiche di colonna (es. (1fr, 1fr)); è tollerato anche un intero n
+//      che equivale a n colonne 1fr (retrocompatibilità con le vecchie lezioni).
 #let cmp(cols, ..cells) = keep({
-  let c = cells.pos(); let n = cols.len()
-  grid(columns: cols, inset: (x: 4pt, y: 3pt), align: left,
+  let c = cells.pos()
+  let spec = if type(cols) == int { range(cols).map(_ => 1fr) } else { cols }
+  let n = spec.len()
+  grid(columns: spec, inset: (x: 4pt, y: 3pt), align: left,
     stroke: (x,y) => if y>0 {(top: 0.35pt+rule)} else {none},
     ..c.enumerate().map(((i,v)) => if calc.rem(i,n)==0 {text(weight:"bold", fill:primary, v)} else {v}))
 })

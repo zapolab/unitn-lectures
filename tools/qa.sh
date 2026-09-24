@@ -44,6 +44,14 @@ if [ -f _crosscheck.txt ]; then
   else note OK "_crosscheck.txt: nessuna divergenza OCR"; fi
 else note INFO "_crosscheck.txt assente (cross-check OCR non richiesto)"; fi
 
+# 5c. artefatti di triage
+if [ -f _pagine.tsv ]; then
+  ntot=$(grep -c -v '^#' _pagine.tsv 2>/dev/null || true)
+  nren=$(awk -F'\t' '!/^#/ && $5==1' _pagine.tsv 2>/dev/null | wc -l)
+  note INFO "_pagine.tsv: $ntot pagine, $nren da renderizzare"
+else note INFO "_pagine.tsv assente"; fi
+[ -f _mappa.md ] && note OK "_mappa.md presente" || note INFO "_mappa.md assente"
+
 # 6. PDF finale
 parent=$(basename "$(cd ../.. && pwd)")   # corso = dir che contiene source/
 lesson=$(basename "$(pwd)")               # lezione
