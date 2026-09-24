@@ -5,6 +5,7 @@
 - Font ammessi (CLI embedded): `New Computer Modern`, `New Computer Modern Math`, `DejaVu Sans Mono`, `Libertinus Serif`. Niente emoji/Unicode esotico → simboli matematici sempre in math mode (`$arrow.r$`, `$alpha$`, ecc.).
 - Nessun testo/commento fuori dal `.typ`.
 - **Figure sempre vettoriali Typst** (pattern o pacchetti); niente raster.
+- **Trappole Typst** (errori ricorrenti): grassetto `*x*`, mai `**`; `ltimes` e `times.circle` non esistono; in cetz la somma diretta di tuple va in panico (usa `vadd`); `draw.arc` richiede `start < stop`; `rg` non esiste → `rgb`.
 
 ## Pacchetti consigliati
 Elenco per evitare fetch ripetuti. Pinna la versione; sintassi/opzioni: manualistica solo se serve.
@@ -46,7 +47,7 @@ Il preamble si copia, non si legge: qui ci sono tutte le firme. Non sondarle per
 - `callout(title, body)` / `keypt(title, body)` / `defbox(title, body)` / `warn(title, body)` — box colorati.
   ```typst
   #defbox("Definizione", [Un automa è …])
-  #warn("DA VERIFICARE", [valore illeggibile, p. 12])
+  #warn("DA VERIFICARE", [valore illeggibile nella formula di aggiornamento])
   ```
 - `cmp(cols, ..cells)` — confronto a griglia, prima cella di ogni riga in grassetto. `cols` è un **array** di specifiche di colonna; è tollerato anche un intero = N colonne `1fr`.
   ```typst
@@ -63,35 +64,8 @@ Il preamble si copia, non si legge: qui ci sono tutte le firme. Non sondarle per
   ```
 
 ## Pattern riutilizzabili
-Mattoni canonici, testati. Usali; non reinventarli.
-
-- `asciifig(text, cap)` — `raw(text, block: true)` + didascalia di una riga.
-- `titleblock(title, sub)` — v. sopra.
-- **fletcher** per architetture/flowchart (scalato dentro la colonna):
-  ```typst
-  #import "@preview/fletcher:0.5.8": diagram, node, edge
-  #scale(75%, reflow: true)[#figure(caption: [..], diagram(
-    node-stroke: 0.7pt + rgb("#1B4965"), edge-stroke: 0.8pt + rgb("#2E7D32"), spacing: 1.4em,
-    node((0,0), fill: rgb("#2E9E28"))[Start],
-    node((1,0), [Decision]),
-    edge((0,0), (1,0), "->", [label]),
-  ))]
-  ```
-- `proj`/`triad`/`arc3` — frame 3D isometrico su `cetz` per geometria/robotica; helper locali alla lezione.
-  ```typst
-  #let proj(p) = ((p.at(0) - p.at(1)) * 0.82, p.at(2) - (p.at(0) + p.at(1)) * 0.42)
-  #let triad(o, ex, ey, ez, lx, ly, lz, c: black, dash: none, len: 1.0) = {
-    let oo = proj(o)
-    let st = if dash == none { (stroke: c, mark: (end: ">", fill: c)) }
-             else { (stroke: (paint: c, dash: dash), mark: (end: ">", fill: c)) }
-    draw.line(oo, proj(vadd(o, smul(len, ex))), ..st)
-    draw.content(proj(vadd(o, smul(len * 1.16, ex))), lx, fill: c)
-  }
-  #canvas({ triad((0,0,0), (2,0,0), (0,2,0), (0,0,2), $x_0$, $y_0$, $z_0$)
-             draw.line(..arc3((0,0,1), (1,0,0), 40deg, 0.7), mark: (end: ">")) })
-  ```
-- Diagrammi/grafi complessi (architetture, flowchart, alberi, UML): `fletcher`/`cetz`, niente coordinate assolute a mano. Diagramma più largo della colonna → `#scale(75%, reflow: true)[#figure(...)]`.
-- Etichette/frecce: stesse del PDF; nessun contenuto inventato.
+Non reinventare i mattoni: catalogo, tipo e firme in `/workspace/tools/patterns/INDEX.md`.
+Copia il pattern che serve nella lezione come `_<nome>.typ` e usalo secondo l'INDEX (`modulo` → `#import "_<nome>.typ": *`, `snippet` → `#include "_<nome>.typ"`).
 
 ### Numerazione figure
 `asciifig` (e ogni `raw` dentro un `#figure`) usa un contatore separato da `#figure`: mescolarli duplica i numeri. In **ogni** `#figure` con fletcher/cetz aggiungi un `#raw("")` (vuoto) nel body, così entra nello stesso contatore:
@@ -108,6 +82,7 @@ Mattoni canonici, testati. Usali; non reinventarli.
 - Elenchi: integrali per la parte **in-scope** (v. `PROMPT.md` §Definizioni), compressi ma non tagliati.
 - Codice/espressioni: inline con backtick; blocchi con ` ```typst ` (o linguaggio reale) non indentati. `raw` è a 6.4pt: spezza le righe lunghe (~62 caratteri max), senza alterare il contenuto.
 - Didascalie figure: dal PDF o descrizione oggettiva, mai inventate, mai numeri di pagina.
+- Etichette/frecce: stesse del PDF; nessun contenuto inventato.
 
 ## Lunghezza (compressione)
 Dipende dal **contenuto**, non dal numero di slide: slide vuote/foto non contano, slide dense (definizioni, elenchi, formule, tabelle, figure) sì.

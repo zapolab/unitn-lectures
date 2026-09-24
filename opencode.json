@@ -7,9 +7,9 @@
       },
       "models": {
         "deepseek/deepseek-v4.1-flash": {
-          "options": {
-            "textVerbosity": "low"
-          },
+          // "options": {
+          //   "textVerbosity": "low"
+          // },
           "variants": {
             "fast": {
               "reasoningEffort": "low",
@@ -32,6 +32,10 @@
       "*.env": "deny",
       "*.env.*": "deny",
       "*.env.example": "allow"
+    },
+    "write": {
+      "*": "deny",
+      "/workspace/**": "allow",
     }
   },
   "compaction": {

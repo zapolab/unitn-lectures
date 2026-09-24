@@ -22,6 +22,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   unzip \
   jq \
   xz-utils \
+  ripgrep \
   fonts-liberation \
   fonts-dejavu \
   # clean APT cache
@@ -38,6 +39,15 @@ RUN curl -fsSL https://github.com/typst/typst/releases/latest/download/typst-aar
 RUN curl -fsSL https://opencode.ai/install | bash
 RUN ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode
 
+# dev user
+RUN groupadd -g 1000 dev && \
+    useradd -u 1000 -g dev -m -s /bin/bash dev
+
+# Make dev access OpenCode
+RUN ln -sf /root/.opencode/bin/opencode /usr/local/bin/opencode && \
+    chmod -R a+rX /root/.opencode
+
+USER dev
 WORKDIR /workspace
 
 CMD ["sleep", "infinity"]

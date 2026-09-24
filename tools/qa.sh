@@ -14,6 +14,16 @@ if grep -nE 'p\. [0-9]|slide [0-9]|pag\. [0-9]|vedi sopra|come visto' "$typ"; th
   note FAIL "riferimenti a pagine/slide"; fail=1
 else note OK "nessun riferimento a pagine/slide"; fi
 
+# 1b. trappole Typst (zero token: becca prima della compilazione)
+# Ignora blocchi ``` e codice inline `...`: lì ** e rg() possono essere legittimi.
+logic=$(awk 'BEGIN{f=0} /^[ \t]*```/{f=!f; next} !f' "$typ" | sed -E 's/`[^`]*`//g')
+if printf '%s\n' "$logic" | grep -nE '\*\*'; then
+  note FAIL "grassetto markdown ** (in Typst usa *x*)"; fail=1
+else note OK "nessun ** markdown"; fi
+if printf '%s\n' "$logic" | grep -nE '\bltimes\b|times\.circle|\brg\('; then
+  note FAIL "funzioni inesistenti: ltimes/times.circle/rg"; fail=1
+else note OK "nessuna funzione Typst inesistente"; fi
+
 # 2. titoli duplicati
 dups=$(grep -oE '^=+ .*' "$typ" | sed 's/^=* //' | sort | uniq -d)
 if [ -n "$dups" ]; then note FAIL "titoli duplicati:"; echo "$dups"; fail=1
@@ -58,5 +68,10 @@ lesson=$(basename "$(pwd)")               # lezione
 pdf="../../$parent-$lesson.pdf"
 [ -f "$pdf" ] && note OK "PDF: $pdf ($(pdfinfo "$pdf" 2>/dev/null | awk '/^Pages:/{print $2}') pagine)" \
              || { note FAIL "PDF mancante: $pdf"; fail=1; }
+
+# 7. controllo geometrico (overflow gutter/margine) — WARN non bloccante
+if [ -f "$pdf" ]; then
+  python3 /workspace/tools/qa_geom.py "$pdf"
+else note INFO "qa_geom saltato: PDF assente"; fi
 
 exit $fail

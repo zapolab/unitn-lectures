@@ -7,7 +7,7 @@ Agente CLI non interattivo. Input:
 Output (obbligatorio):
 - `<corso>-<lezione>.typ` nella dir della lezione.
 - PDF compilato DIRETTAMENTE in `lectures/<corso>/<corso>-<lezione>.pdf`.
-- Artefatti interni nella dir della lezione: `build/`, `_preamble.typ`, `_pagine.tsv`, `_estrazione_raw.txt`, `_estrazione_layout.txt`, `_crosscheck.txt`, `_mappa.md`.
+- Artefatti interni nella dir della lezione: `build/`, `_preamble.typ`, `_<nome>.typ` (pattern copiati), `_pagine.tsv`, `_estrazione_raw.txt`, `_estrazione_layout.txt`, `_crosscheck.txt`, `_mappa.md`.
 - Non modificare/spostare/cancellare i PDF originali.
 - Nome file: solo lettere/cifre/trattini, zeri iniziali della dir lezione inclusi. `<corso>` = nome della dir che contiene `source/`; `<lezione>` = nome della dir dentro `source/`.
 
@@ -38,7 +38,7 @@ Fonte unica = PDF. Non aggiungere né completare con conoscenze tue o dal web: o
 
 Ambito di lettura = ristretto. Non esplorare nulla fuori da `lectures/<corso>/source/<lezione>/`. NON usare `git`. Gli unici file leggibili:
 - `PROMPT.md` e `STYLE.md` (le regole);
-- strumenti in `/workspace/tools/`: `estrai.sh` e `qa.sh` si **eseguono**, `preamble.typ` si **copia**; non si leggono;
+- strumenti in `/workspace/tools/`: `estrai.sh` e `qa.sh` si **eseguono**, `preamble.typ` si **copia**; non si leggono. Di `/workspace/tools/patterns/` si legge solo `INDEX.md` (indice compatto) e si copia il singolo `patterns/<nome>.typ` → `_<nome>.typ` quando serve;
 - il/i PDF sorgente della sola lezione corrente;
 - i file dentro `lectures/<corso>/source/<lezione>/`.
 Vietato leggere `.typ`, PDF, `_pagine.tsv`, `_estrazione_raw.txt`, `_mappa.md` o artefatti di altre lezioni/corsi. `/workspace/tools/` è l'unica eccezione fuori dalla dir lezione.
@@ -53,7 +53,7 @@ Fedeltà: il render è la fonte di verità, l'estrazione testuale un ausilio. Pe
 
 Attenzione all'ambiente: l'output dei tool può essere redatto o alterato. Prima di dichiarare corrotta un'estrazione, verifica con una rappresentazione alternativa (render, `od`, lunghezza del valore): non concludere da un singolo output.
 
-**Economia visiva**: guarda solo le pagine renderizzate (`build/sheet-*.png`; le pagine `testo` non vengono renderizzate). Leggi i sheet una sola volta; render mirati solo per etichette illeggibili o per figure/tabelle che il testo segnala ma il triage non ha reso. Non ri-leggere immagini già analizzate. Dopo la compilazione usa `qa.sh` e al più 1–2 render di controllo.
+**Economia visiva**: guarda solo le pagine renderizzate (`build/sheet-*.png`; le pagine `testo` non vengono renderizzate). Leggi i sheet una sola volta; render mirati solo per etichette illeggibili o per figure/tabelle che il testo segnala ma il triage non ha reso. Non ri-leggere immagini già analizzate. Dopo la compilazione usa `qa.sh`: renderizza **solo le pagine segnalate** da `qa_geom` (al più 3 render di controllo, non "1–2" a caso).
 
 **Path assoluti**: tutti i comandi usano path assoluti. Radice repo = `/workspace`. Vietato `../` e path relativi (soprattutto verso `/workspace/tools/` e verso l'output). I placeholder `<corso>`/`<lezione>` restano, dentro path assoluti: `/workspace/lectures/<corso>/source/<lezione>/` e `/workspace/lectures/<corso>/<corso>-<lezione>.pdf`.
 
@@ -85,17 +85,17 @@ Segui `STYLE.md` per vincoli tecnici, layout, firme degli helper, pattern, strut
 #show: doc.with(title: "<TITOLO LEZIONE>", label: "<corso>-<lezione>")
 #titleblock("<TITOLO LEZIONE>", "<corso> — Lezione <n>")
 ```
-`cp /workspace/tools/preamble.typ /workspace/lectures/<corso>/source/<lezione>/_preamble.typ`; `#titleblock` è obbligatorio. Importa i pacchetti `@preview` necessari. Non ricopiare il preamble; usa gli helper documentati in `STYLE.md`.
+`cp /workspace/tools/preamble.typ /workspace/lectures/<corso>/source/<lezione>/_preamble.typ`; `#titleblock` è obbligatorio. Se serve un pattern: `cp /workspace/tools/patterns/<nome>.typ /workspace/lectures/<corso>/source/<lezione>/_<nome>.typ` e usalo secondo `patterns/INDEX.md` (`modulo` → `#import`, `snippet` → `#include`). Importa i pacchetti `@preview` necessari. Non ricopiare il preamble; usa gli helper documentati in `STYLE.md`.
 Ordine sezioni = ordine dei divider: `==` macro-argomento, `===` concetto. Stile telegrafico completo, zero riempitivi.
 
 ## 5. Compilazione e QA
 Dalla dir lezione:
 `typst compile /workspace/lectures/<corso>/source/<lezione>/<corso>-<lezione>.typ /workspace/lectures/<corso>/<corso>-<lezione>.pdf`
 (nessun output intermedio in `build/`; `--font-path ./fonts` se font locali). Zero errori e zero warning; i warning di glifo si risolvono sostituendo il carattere con math mode o testo. Itera finché pulito.
-Poi `bash /workspace/tools/qa.sh /workspace/lectures/<corso>/source/<lezione>` (riferimenti vietati, titoli duplicati, figure, compile, DA VERIFICARE, PDF finale). Correggi i FAIL e ricompila.
+Poi `bash /workspace/tools/qa.sh /workspace/lectures/<corso>/source/<lezione>` (riferimenti vietati, trappole Typst, titoli duplicati, figure, compile, DA VERIFICARE, PDF finale, controllo geometrico `qa_geom`). Correggi i FAIL e ricompila. `qa_geom` è un WARN: renderizza solo le pagine che segnala e correggi l'overflow se reale.
 
 ## 6. Pattern riutilizzabili
-Se ricavi un pattern di figura/struttura **generale e testato** (compile pulita), aggiungilo a `STYLE.md` §Pattern riutilizzabili: firma + un esempio, in stile compatto. Non duplicare i pattern esistenti; solo quelli riutilizzabili in altre lezioni, non snippet specifici.
+Se ricavi un pattern di figura/struttura **generale e testato** (compile pulita), **non scriverlo in `STYLE.md`**: registralo come `/workspace/tools/patterns/<nome>.typ` (snippet completo, compilabile) e aggiungi una riga a `/workspace/tools/patterns/INDEX.md` (`nome | tipo | uso | firma`). Non duplicare i pattern esistenti; aggiungi solo quelli riutilizzabili in altre lezioni. Nel report finale elenca i pattern aggiunti.
 
 # REPORT FINALE (nel messaggio, non nel .typ)
 1. File creati (percorsi completi) e nome adottato con deduzione di `<corso>`/`<lezione>`.

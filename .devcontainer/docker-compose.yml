@@ -6,6 +6,7 @@ services:
     volumes:
       - ..:/workspace:cached
       - ./entrypoint.sh:/usr/local/bin/entrypoint.sh:ro
+    user: "1000:1000"
     entrypoint: ["/usr/local/bin/entrypoint.sh"]
     command: sleep infinity
     env_file: .env
