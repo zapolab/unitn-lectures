@@ -7,6 +7,7 @@
 #   _estrazione_layout.txt testo -layout SOLO per le pagine tabella/misto
 #   build/pg-*.png         render SOLO delle pagine con figure/tabelle/scan (o flaggate OCR)
 #   build/sheet-*.png      contact sheet delle sole pagine renderizzate (tile 3x3)
+#   build/formula-sheet-*.png  contact sheet delle pagine testo a contenuto matematico (tile 3x3, alta densita')
 #   _crosscheck.txt        divergenze OCR vs layer testuale (con --ocr; vuoto se nessuna)
 # Il triage usa PyMuPDF (pymupdf). Se assente, avvisa e renderizza tutte le pagine (legacy).
 # Solo CPU/tempo, nessun costo token.
@@ -33,7 +34,7 @@ shopt -s nullglob
 pdfs=( $(ls -v *.pdf 2>/dev/null) )
 [ ${#pdfs[@]} -eq 0 ] && { echo "ERRORE: nessun PDF in $d"; exit 1; }
 
-rm -f build/pg-*.png build/sheet-*.png build/_*.tsv build/_*.txt build/_*.png
+rm -f build/pg-*.png build/sheet-*.png build/formula-sheet-*.png build/_fx-*.png build/_*.tsv build/_*.txt build/_*.png
 : > _pagine.tsv
 : > _estrazione_raw.txt
 : > _estrazione_layout.txt
@@ -257,6 +258,79 @@ if command -v convert >/dev/null && ls build/pg-*.png >/dev/null 2>&1; then
   rm -f build/_blank.png build/_row*.png
   echo "Contact sheet: build/sheet-*.png ($sheet fogli, tile ${tile}x${tile}, ${total} pagine renderizzate)"
 fi
+
+# ---- 4b. formula sheet: contact sheet delle pagine testo a contenuto matematico ----
+# Le pagine `testo` non vengono renderizzate singolarmente: per verificare formule e
+# matrici a vista si costruisce un unico contact sheet delle pagine con piu' indicatori
+# matematici (matrici, atan2, sqrt, notazione c_/s_, ecc.).
+python3 - "$PWD" <<'PY'
+import sys, os, re
+wd = sys.argv[1]; os.chdir(wd)
+meta = {}
+with open("_pagine.tsv", encoding="utf-8") as fh:
+    for ln in fh:
+        if ln.startswith("#") or not ln.strip():
+            continue
+        c = ln.rstrip("\n").split("\t")
+        meta[int(c[0])] = {"file": c[1], "page": int(c[2]), "tipo": c[3], "render": int(c[4])}
+# testo per pagina: l'indice globale e' l'ordine dei marker "=== PAGE ==="
+pages = {}
+seq = 0; cur = None
+for ln in open("_estrazione_raw.txt", encoding="utf-8", errors="ignore"):
+    if re.match(r"=== PAGE \d+ ===", ln):
+        seq += 1; cur = seq; pages[cur] = []
+    elif ln.startswith("====="):
+        cur = None
+    elif cur is not None:
+        pages[cur].append(ln)
+strong = re.compile(r"(?:cos|sin)\s*\(|atan2|√|[αβγδθφψηεξ]|[=≠≤≥]|\bR[xyz]?\b")
+def score(txt):
+    return len(strong.findall(txt))
+sel = []
+for idx, m in meta.items():
+    if m["tipo"] != "testo" or m["render"] == 1:
+        continue
+    sc = score("\n".join(pages.get(idx, [])))
+    if sc >= 4:
+        sel.append((idx, m["file"], m["page"], sc))
+sel.sort(key=lambda x: -x[3])
+sel = sel[:18]
+sel.sort(key=lambda x: x[0])
+with open("build/_formula_pages.tsv", "w", encoding="utf-8") as out:
+    for idx, f, p, sc in sel:
+        out.write("%s\t%s\t%s\t%s\n" % (idx, f, p, sc))
+print("Formula sheet: %d pagine testo a contenuto matematico" % len(sel))
+PY
+if [ -s build/_formula_pages.tsv ] && command -v pdftoppm >/dev/null && command -v convert >/dev/null && command -v identify >/dev/null; then
+  : > build/_fx_list.txt
+  while IFS=$'\t' read -r i f p sc; do
+    pdftoppm -r 150 -f "$p" -l "$p" -png -singlefile "$f" "build/_fx-$i" >/dev/null 2>&1 || true
+    if [ -f "build/_fx-$i.png" ]; then echo "build/_fx-$i.png" >> build/_fx_list.txt; fi
+  done < build/_formula_pages.tsv
+  if [ -s build/_fx_list.txt ]; then
+    mapfile -t imgs < build/_fx_list.txt
+    w=$(identify -format '%w' "${imgs[0]}"); h=$(identify -format '%h' "${imgs[0]}")
+    convert -size "${w}x${h}" xc:'#DDDDDD' build/_fxblank.png
+    tile=3; per=$((tile*tile)); total=${#imgs[@]}; idx=0; sheet=0
+    while [ $idx -lt $total ]; do
+      rows=()
+      for r in $(seq 0 $((tile-1))); do
+        cols=()
+        for c in $(seq 0 $((tile-1))); do
+          k=$((idx + r*tile + c))
+          if [ $k -lt $total ]; then cols+=("${imgs[$k]}"); else cols+=("build/_fxblank.png"); fi
+        done
+        row=$(printf 'build/_fxrow%d_%d.png' "$sheet" "$r")
+        convert "${cols[@]}" +append "$row"; rows+=("$row")
+      done
+      convert "${rows[@]}" -append -bordercolor '#DDDDDD' -border 6 "build/formula-sheet-$sheet.png"
+      idx=$((idx+per)); sheet=$((sheet+1))
+    done
+    echo "Formula sheet: build/formula-sheet-*.png ($sheet fogli, ${total} pagine)"
+  fi
+  rm -f build/_fx-*.png build/_fxblank.png build/_fxrow*.png build/_fx_list.txt
+fi
+rm -f build/_formula_pages.tsv
 
 # ---- 5. cross-check OCR selettivo (solo con --ocr) ----
 if [ "$ocr" -eq 1 ]; then

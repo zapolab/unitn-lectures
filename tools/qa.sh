@@ -39,7 +39,10 @@ if grep -q '#titleblock(' "$typ"; then note OK "titleblock presente"
 else note FAIL "titleblock mancante"; fail=1; fi
 
 # 4. compilazione pulita (zero errori/warning)
-out=$(typst compile "$typ" /tmp/_qa_build.pdf 2>&1 || true)
+mkdir -p build
+qa_tmp="build/_qa_build.pdf"
+out=$(typst compile "$typ" "$qa_tmp" 2>&1 || true)
+rm -f "$qa_tmp"
 if [ -n "$out" ]; then echo "$out"; note FAIL "compile con errori/warning"; fail=1
 else note OK "compile pulita"; fi
 

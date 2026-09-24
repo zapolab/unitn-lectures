@@ -25,18 +25,17 @@
   },
   "permission": {
     "read": {
-      "*": "allow",
-      "../*": "deny",
-      "**/../*": "deny",
-      "/*": "deny",
+      "*": "deny",
+      "/workspace/**": "allow",
       "*.env": "deny",
       "*.env.*": "deny",
       "*.env.example": "allow"
     },
-    "write": {
+    "edit": {
       "*": "deny",
-      "/workspace/**": "allow",
-    }
+      "/workspace/**": "allow"
+    },
+    "external_directory": "deny"
   },
   "compaction": {
     "prune": true

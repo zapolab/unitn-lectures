@@ -18,6 +18,7 @@ MX = 13 * MM          # margine laterale
 TOP = 12 * MM         # margine superiore (header)
 BOT = 13 * MM         # margine inferiore (numero pagina)
 GUT = 4.0             # semi-ampiezza banda gutter
+MTOL = 2.0            # tolleranza oltre il margine (pt): sotto e' rumore
 
 
 def titleblock_bottom(pg, W):
@@ -33,7 +34,8 @@ def titleblock_bottom(pg, W):
 
 def main(path):
     doc = pymupdf.open(path)
-    pages = {}
+    serious = {}
+    minor = {}
     for n, pg in enumerate(doc, 1):
         W, H = pg.rect.width, pg.rect.height
         mid = W / 2
@@ -43,24 +45,40 @@ def main(path):
                 continue
             if n == 1 and y1 < title_y:
                 continue
-            if x0 < mid + GUT and x1 > mid - GUT:
-                pages.setdefault(n, {"gutter": [], "margine": []})["gutter"].append(t)
-            elif x1 > W - MX + 2 or x0 < MX - 2:
-                pages.setdefault(n, {"gutter": [], "margine": []})["margine"].append(t)
+            # gutter: qualunque sovrapposizione con la banda centrale
+            ov = min(x1, mid + GUT) - max(x0, mid - GUT)
+            if ov > 0:
+                d = serious.setdefault(n, {"gutter": [], "margine": []})
+                d["gutter"].append((t, ov))
+                continue
+            # margine: quanto esce oltre il margine laterale
+            over = max(x1 - (W - MX), (MX - x0))
+            if over > 0:
+                bucket = serious if over > MTOL else minor
+                d = bucket.setdefault(n, {"gutter": [], "margine": []})
+                d["margine"].append((t, over))
     doc.close()
 
-    if not pages:
-        print("OK     qa_geom: nessun overflow di colonna/margine")
+    if not serious:
+        if minor:
+            cells = sum(len(v["gutter"]) + len(v["margine"]) for v in minor.values())
+            mx = max((w[1] for v in minor.values() for w in v["margine"]), default=0.0)
+            print("OK     qa_geom: nessun overflow reale (ignorate %d celle entro %.1fpt oltre il margine)"
+                  % (cells, mx))
+        else:
+            print("OK     qa_geom: nessun overflow di colonna/margine")
         return
 
-    tot = sum(len(v["gutter"]) + len(v["margine"]) for v in pages.values())
-    print("WARN   qa_geom: %d pagine con possibile overflow (%d celle in gutter/oltre margine)"
-          % (len(pages), tot))
-    for n in sorted(pages):
-        g, m = pages[n]["gutter"], pages[n]["margine"]
-        sample = (g + m)[:3]
-        print("       p.%d: gutter %d, margine %d es. %s"
-              % (n, len(g), len(m), ", ".join(map(repr, sample))))
+    tot = sum(len(v["gutter"]) + len(v["margine"]) for v in serious.values())
+    print("WARN   qa_geom: %d pagine con overflow reale (%d celle in gutter/oltre margine)"
+          % (len(serious), tot))
+    for n in sorted(serious):
+        g, m = serious[n]["gutter"], serious[n]["margine"]
+        gmax = max((w[1] for w in g), default=0.0)
+        mmax = max((w[1] for w in m), default=0.0)
+        sample = [t for t, _ in (g + m)[:3]]
+        print("       p.%d: gutter %d (max %.1fpt), margine %d (max %.1fpt) es. %s"
+              % (n, len(g), gmax, len(m), mmax, ", ".join(map(repr, sample))))
 
 
 if __name__ == "__main__":
