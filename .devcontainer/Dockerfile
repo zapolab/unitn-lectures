@@ -27,6 +27,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   # clean APT cache
   && rm -rf /var/lib/apt/lists/*
 
+# PyMuPDF
+RUN pip3 install --no-cache-dir --break-system-packages pymupdf
+
 # Typst
 RUN curl -fsSL https://github.com/typst/typst/releases/latest/download/typst-aarch64-unknown-linux-musl.tar.xz \
   | tar -xJ -C /usr/local/bin --strip-components=1

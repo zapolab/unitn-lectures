@@ -4,18 +4,41 @@
     "openrouter": {
       "options": {
         "apiKey": "{env:OPENROUTER_API_KEY}"
+      },
+      "models": {
+        "deepseek/deepseek-v4.1-flash": {
+          "options": {
+            "textVerbosity": "low"
+          },
+          "variants": {
+            "fast": {
+              "reasoningEffort": "low",
+              "textVerbosity": "low"
+            },
+            "safe": {
+              "textVerbosity": "low"
+            }
+          }
+        }
       }
     }
   },
   "permission": {
     "read": {
       "*": "allow",
-      "../*": "deny",
-      "**/../*": "deny",
-      "/*": "deny",
       "*.env": "deny",
       "*.env.*": "deny",
-      "*.env.example": "allow"  
+      "*.env.example": "allow"
+    }
+  },
+  "compaction": {
+    "prune": true
+  },
+  "attachment": {
+    "image": {
+      "max_width": 1600,
+      "max_height": 1600,
+      "max_base64_bytes": 3670016
     }
   }
 }
