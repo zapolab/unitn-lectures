@@ -5,7 +5,7 @@
 - Font ammessi (CLI embedded): `New Computer Modern`, `New Computer Modern Math`, `DejaVu Sans Mono`, `Libertinus Serif`. Niente emoji/Unicode esotico → simboli matematici sempre in math mode (`$arrow.r$`, `$alpha$`, ecc.).
 - Nessun testo/commento fuori dal `.typ`.
 - **Figure sempre vettoriali Typst** (pattern o pacchetti); niente raster.
-- **Trappole Typst** (errori ricorrenti): grassetto `*x*`, mai `**`; `ltimes` e `times.circle` non esistono; in cetz la somma diretta di tuple va in panico (usa `vadd`); `draw.arc` richiede `start < stop`; `rg` non esiste → `rgb`.
+- **Trappole Typst** (errori ricorrenti): grassetto `*x*`, mai `**`; `ltimes` e `times.circle` non esistono; in cetz la somma diretta di tuple va in panico (usa `vadd`); `draw.arc` richiede `start < stop`; `rg` non esiste → `rgb`; `/` è la frazione, quindi il denominatore composto va tra parentesi, es. `z^* / (|z|^2)` (le parentesi raggruppano e non si vedono), altrimenti potenza/barre di valore assoluto escono dalla frazione.
 
 ## Pacchetti consigliati
 Elenco per evitare fetch ripetuti. Pinna la versione; sintassi/opzioni: manualistica solo se serve.
