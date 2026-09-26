@@ -22,7 +22,6 @@
 ])
 #let keypt(t,b) = callout(t,b, col: accent, bg: rgb("#FDF4E7"))
 #let defbox(t,b) = callout(t,b, col: defcol, bg: rgb("#EDF5F4"))
-#let warn(t,b)   = callout(t,b, col: danger, bg: rgb("#FBEDED"))
 
 // ---- tabelle indivisibili, solo filetti orizzontali ----
 // cmp: `cols` è un array di specifiche di colonna (es. (1fr, 1fr)); è tollerato anche un intero n

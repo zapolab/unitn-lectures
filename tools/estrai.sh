@@ -1,29 +1,20 @@
 #!/usr/bin/env bash
-# estrai.sh — ricognizione lezione: triage pagine + testo pulito + render selettivo + cross-check OCR.
-# Uso: estrai.sh [--ocr] [--ocr-all] [--ocr-lang LANG] [lesson_dir]   (default: .)
+# estrai.sh — ricognizione lezione: triage pagine + testo pulito + render selettivo.
+# Uso: estrai.sh [lesson_dir]   (default: .)
 # Produce:
-#   _pagine.tsv            triage per pagina: tipo, flag render/ocr, metriche
+#   _pagine.tsv            triage per pagina: tipo, flag render, metriche
 #   _estrazione_raw.txt    testo pagina per pagina pulito (spazi collassati, header/footer ripetuti rimossi)
 #   _estrazione_layout.txt testo -layout SOLO per le pagine tabella/misto
-#   build/pg-*.png         render SOLO delle pagine con figure/tabelle/scan (o flaggate OCR)
+#   build/pg-*.png         render SOLO delle pagine con figure/tabelle/scan
 #   build/sheet-*.png      contact sheet delle sole pagine renderizzate (tile 3x3)
 #   build/formula-sheet-*.png  contact sheet delle pagine testo a contenuto matematico (tile 3x3, alta densita')
-#   _crosscheck.txt        divergenze OCR vs layer testuale (con --ocr; vuoto se nessuna)
 # Il triage usa PyMuPDF (pymupdf). Se assente, avvisa e renderizza tutte le pagine (legacy).
 # Solo CPU/tempo, nessun costo token.
 set -euo pipefail
 
-ocr=0
-ocr_all=0
-ocr_lang=eng
 args=()
 while [ $# -gt 0 ]; do
-  case "$1" in
-    --ocr) ocr=1 ;;
-    --ocr-all) ocr=1; ocr_all=1 ;;
-    --ocr-lang) shift; ocr_lang="${1:-eng}" ;;
-    *) args+=("$1") ;;
-  esac
+  args+=("$1")
   shift
 done
 d="${args[0]:-.}"; cd "$d"
@@ -44,14 +35,12 @@ python3 -c 'import pymupdf' 2>/dev/null && have_fitz=1
 
 # ---- 1. triage per pagina (PyMuPDF) ----
 if [ "$have_fitz" -eq 1 ]; then
-  python3 - "$PWD" "$ocr" "$ocr_all" "${pdfs[@]}" <<'PY'
+  python3 - "$PWD" "${pdfs[@]}" <<'PY'
 import sys, os, statistics
 import pymupdf
 
 wd = sys.argv[1]
-ocr = int(sys.argv[2])
-ocr_all = int(sys.argv[3])
-pdfs = sys.argv[4:]
+pdfs = sys.argv[2:]
 os.chdir(wd)
 
 metrics = []
@@ -85,9 +74,9 @@ medd = statistics.median([m[5] for m in metrics])
 thri = max(4.0, 1.6 * medi)
 thrd = max(6, medd + 4)
 
-nfig = ntab = nscan = ntesto = nrender = nocr = 0
+nfig = ntab = nscan = ntesto = nrender = 0
 out = open("_pagine.tsv", "w", encoding="utf-8")
-out.write("# _pagine.tsv — triage estrai.sh. Col: idx file pagina tipo render ocr chars img% draw tab\n")
+out.write("# _pagine.tsv — triage estrai.sh. Col: idx file pagina tipo render chars img% draw tab\n")
 for idx, f, p, ch, ip, nd, nt, mx in metrics:
     if mx > 70:
         tipo = "scan"
@@ -98,20 +87,15 @@ for idx, f, p, ch, ip, nd, nt, mx in metrics:
     else:
         tipo = "testo"
     render = 0 if tipo == "testo" else 1
-    sel = (tipo == "scan") or (ch < max(80, 0.4 * medch))
-    if ocr_all:
-        sel = True
-    ocrflag = 1 if (ocr and sel) else 0
     if tipo == "figura": nfig += 1
     elif tipo == "tabella": ntab += 1
     elif tipo == "scan": nscan += 1
     else: ntesto += 1
     nrender += render
-    nocr += ocrflag
-    out.write("%04d\t%s\t%d\t%s\t%d\t%d\t%d\t%.1f\t%d\t%d\n" % (idx, f, p, tipo, render, ocrflag, ch, ip, nd, nt))
+    out.write("%04d\t%s\t%d\t%s\t%d\t%d\t%.1f\t%d\t%d\n" % (idx, f, p, tipo, render, ch, ip, nd, nt))
 out.close()
-print("Triage: %d figura, %d tabella, %d scan, %d testo | render %d, OCR %d" %
-      (nfig, ntab, nscan, ntesto, nrender, nocr))
+print("Triage: %d figura, %d tabella, %d scan, %d testo | render %d" %
+      (nfig, ntab, nscan, ntesto, nrender))
 PY
 else
   echo "ATTENZIONE: pymupdf assente -> nessun triage, renderizzo tutte le pagine (legacy)."
@@ -120,7 +104,7 @@ else
     n=$(pdfinfo "$f" | awk '/^Pages:/{print $2}')
     for p in $(seq 1 "$n"); do
       idx=$((idx+1))
-      printf '%04d\t%s\t%s\ttesto\t1\t0\t0\t0\t0\t0\n' "$idx" "$f" "$p" >> _pagine.tsv
+      printf '%04d\t%s\t%s\ttesto\t1\t0\t0\t0\t0\n' "$idx" "$f" "$p" >> _pagine.tsv
     done
   done
 fi
@@ -229,7 +213,7 @@ PY
 
 # ---- 4. render selettivo + contact sheet delle sole pagine renderizzate ----
 idx=0
-while IFS=$'\t' read -r i f p tipo render ocrflag ch ip nd nt; do
+while IFS=$'\t' read -r i f p tipo render ch ip nd nt; do
   case "$i" in \#*|"") continue ;; esac
   if [ "$render" = "1" ]; then
     pdftoppm -r 120 -f "$p" -l "$p" -png -singlefile "$f" "build/pg-$i" >/dev/null 2>&1 || true
@@ -331,96 +315,6 @@ if [ -s build/_formula_pages.tsv ] && command -v pdftoppm >/dev/null && command 
   rm -f build/_fx-*.png build/_fxblank.png build/_fxrow*.png build/_fx_list.txt
 fi
 rm -f build/_formula_pages.tsv
-
-# ---- 5. cross-check OCR selettivo (solo con --ocr) ----
-if [ "$ocr" -eq 1 ]; then
-  if command -v tesseract >/dev/null && command -v pdftoppm >/dev/null && command -v python3 >/dev/null; then
-    : > _crosscheck.txt
-    : > build/_pagemap.tsv
-    while IFS=$'\t' read -r i f p tipo render ocrflag ch ip nd nt; do
-      case "$i" in \#*|"") continue ;; esac
-      [ "$ocrflag" = "1" ] || continue
-      tag="$i"
-      pdftotext -nopgbrk -f "$p" -l "$p" "$f" "build/_txt_p$tag.txt" 2>/dev/null || true
-      pdftoppm -r 300 -f "$p" -l "$p" -png -singlefile "$f" "build/_ocr_p$tag" >/dev/null 2>&1 || true
-      if [ -f "build/_ocr_p$tag.png" ]; then
-        tesseract "build/_ocr_p$tag.png" "build/_ocr_p$tag" -l "$ocr_lang" >/dev/null 2>&1 || true
-      fi
-      printf '%s\t%s\t%s\n' "$tag" "$f" "$p" >> build/_pagemap.tsv
-    done < _pagine.tsv
-    if ! ls build/_ocr_p*.txt >/dev/null 2>&1; then
-      echo "Cross-check OCR: nessun output OCR (language pack '$ocr_lang' mancante?)"
-    fi
-    python3 - "$PWD/build" <<'PY'
-import sys, os, re, math
-from difflib import SequenceMatcher
-
-build = sys.argv[1]
-tokre = re.compile(r"[a-z0-9_][a-z0-9_./:%-]*")
-
-def toks(s):
-    return set(tokre.findall(s.lower()))
-
-def close(a, b):
-    if abs(len(a) - len(b)) > 2:
-        return False
-    return SequenceMatcher(None, a, b).ratio() >= 0.72
-
-pages = []
-with open(os.path.join(build, "_pagemap.tsv"), encoding="utf-8") as fh:
-    for line in fh:
-        line = line.rstrip("\n")
-        if not line:
-            continue
-        tag, f, p = line.split("\t")
-        tf = os.path.join(build, "_txt_p%s.txt" % tag)
-        of = os.path.join(build, "_ocr_p%s.txt" % tag)
-        if not (os.path.exists(tf) and os.path.exists(of)):
-            continue
-        t = toks(open(tf, encoding="utf-8", errors="ignore").read())
-        o = toks(open(of, encoding="utf-8", errors="ignore").read())
-        only_t = set(w for w in t - o if not any(close(w, x) for x in o))
-        only_o = set(w for w in o - t if not any(close(w, x) for x in t))
-        pages.append([tag, f, p, only_t, only_o])
-
-npages = len(pages)
-thr = max(2, math.ceil(0.25 * npages)) if npages else 2
-counts = {}
-for _, _, _, _, oo in pages:
-    for w in oo:
-        counts[w] = counts.get(w, 0) + 1
-
-flagged = []
-noise_pages = 0
-for tag, f, p, ot, oo in pages:
-    if not ot:
-        if oo:
-            noise_pages += 1
-        continue
-    oo = sorted(w for w in oo if counts.get(w, 0) < thr)
-    flagged.append((tag, f, p, sorted(ot), oo))
-
-out = os.path.join(os.path.dirname(build), "_crosscheck.txt")
-with open(out, "w", encoding="utf-8") as fh:
-    if flagged:
-        fh.write("# Divergenze OCR vs layer testuale (solo pagine sospette). 'solo testo' = token del layer assente nel render/OCR (direzione utile).\n")
-        for tag, f, p, ot, oo in flagged:
-            fh.write("=== %s pagina %s (idx %s) ===\n" % (f, p, tag))
-            fh.write("  solo testo: %s\n" % " ".join(ot[:40]))
-            if oo:
-                fh.write("  solo OCR:   %s\n" % " ".join(oo[:40]))
-        if noise_pages:
-            fh.write("# %d pagine con sole divergenze OCR (probabile rumore grafico) omesse.\n" % noise_pages)
-print("Cross-check OCR: %d pagine con 'solo testo'; %d pagine con solo rumore OCR" % (len(flagged), noise_pages))
-PY
-    rm -f build/_txt_p*.txt build/_ocr_p*.txt build/_ocr_p*.png build/_pagemap.tsv
-  else
-    rm -f build/_txt_p*.txt build/_ocr_p*.txt build/_ocr_p*.png build/_pagemap.tsv _crosscheck.txt
-    echo "Cross-check OCR saltato: manca tesseract, pdftoppm o python3"
-  fi
-else
-  rm -f build/_txt_p*.txt build/_ocr_p*.txt build/_ocr_p*.png build/_pagemap.tsv _crosscheck.txt
-fi
 
 echo "Testo: _estrazione_raw.txt ($(wc -l < _estrazione_raw.txt) righe), _estrazione_layout.txt ($(wc -l < _estrazione_layout.txt) righe)"
 echo "Triage: _pagine.tsv ($(grep -c -v '^#' _pagine.tsv) pagine, $(awk -F'\t' '!/^#/ && $5==1' _pagine.tsv | wc -l) da renderizzare)"

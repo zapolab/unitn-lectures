@@ -46,18 +46,7 @@ rm -f "$qa_tmp"
 if [ -n "$out" ]; then echo "$out"; note FAIL "compile con errori/warning"; fail=1
 else note OK "compile pulita"; fi
 
-# 5. DA VERIFICARE raccolti
-n=$(grep -c 'DA VERIFICARE' "$typ" || true)
-note INFO "DA VERIFICARE: $n"
-
-# 5b. cross-check OCR
-if [ -f _crosscheck.txt ]; then
-  nc=$(grep -c '^===' _crosscheck.txt 2>/dev/null || true)
-  if [ "${nc:-0}" -gt 0 ]; then note INFO "_crosscheck.txt: $nc pagine con divergenze OCR da verificare"
-  else note OK "_crosscheck.txt: nessuna divergenza OCR"; fi
-else note INFO "_crosscheck.txt assente (cross-check OCR non richiesto)"; fi
-
-# 5c. artefatti di triage
+# 5. artefatti di triage
 if [ -f _pagine.tsv ]; then
   ntot=$(grep -c -v '^#' _pagine.tsv 2>/dev/null || true)
   nren=$(awk -F'\t' '!/^#/ && $5==1' _pagine.tsv 2>/dev/null | wc -l)

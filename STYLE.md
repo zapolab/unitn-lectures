@@ -44,10 +44,10 @@ Il preamble si copia, non si legge: qui ci sono tutte le firme. Non sondarle per
   ```typst
   #keep[#list([primo], [secondo])]
   ```
-- `callout(title, body)` / `keypt(title, body)` / `defbox(title, body)` / `warn(title, body)` — box colorati.
+- `callout(title, body)` / `keypt(title, body)` / `defbox(title, body)` — box colorati.
   ```typst
   #defbox("Definizione", [Un automa è …])
-  #warn("DA VERIFICARE", [valore illeggibile nella formula di aggiornamento])
+  #keypt("Attenzione", [punto d'esame ricorrente])
   ```
 - `cmp(cols, ..cells)` — confronto a griglia, prima cella di ogni riga in grassetto. `cols` è un **array** di specifiche di colonna; è tollerato anche un intero = N colonne `1fr`.
   ```typst
