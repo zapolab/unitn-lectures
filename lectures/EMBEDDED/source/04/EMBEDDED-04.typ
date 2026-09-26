@@ -1,467 +1,408 @@
 #import "_preamble.typ": *
 #show: doc.with(title: "Processors and I/O", label: "EMBEDDED-04")
-#titleblock("Processors and I/O", "EMBEDDED — Lezione 4")
+#titleblock("Processors and I/O", "EMBEDDED — Lecture 4")
+
+#import "@preview/cetz:0.5.2": canvas, draw
+
+#let cbox(x, y, w, h, t, fs: 5.5pt, fill: none) = {
+  draw.rect((x, y), (x + w, y + h), fill: fill, stroke: 0.5pt + rgb("#1B4965"))
+  draw.content((x + w / 2, y + h / 2), text(size: fs, t))
+}
 
 == Processor and Input and Output Devices
-Other than the CPU, sono presenti molti *peripherals* (I/O devices): Timers, UART, Sensors.
 
-#figure(
-  block(stroke: 0.6pt + ink, inset: 3.5pt, radius: 2pt, width: 100%, {
-    text(size: 5.6pt, weight: "bold")[Chip silicon]
-    v(1pt)
-    grid(columns: (1fr, 0.7fr, 0.7fr, 0.8fr), column-gutter: 2pt, row-gutter: 2pt,
-      gb(fill: rgb("#F6C6A8"))[Cortex-M4], gb[PPB], gb[SCS],
-      grid(rows: (auto, auto), row-gutter: 2pt, gb[NVIC], gb[Debug CRTL]))
-    v(2pt)
-    gb[AHB/ APB]
-    v(2pt)
-    grid(columns: (1fr, 1fr, 1.15fr), column-gutter: 2.5pt,
-      gb(fill: rgb("#E5C6F0"))[On-chip FLASH\ (Code Region)],
-      gb(fill: rgb("#F6C6A8"))[On-chip SRAM\ (SRAM Region)],
-      grid(columns: (1fr, 1fr, 1fr), column-gutter: 1.5pt, gb[Timer], gb[UART], gb[GPIO]))
-    v(2pt)
-    grid(columns: (1fr, 1fr), column-gutter: 2.5pt,
-      gb[External memory interface\ (External RAM Region)],
-      gb(fill: rgb("#F7A8C4"))[External device interface\ (External Device Region)])
-  }),
-  caption: [On-chip FLASH, on-chip SRAM, peripheral region (Timer, UART, GPIO) e interfacce verso dispositivi esterni (External SRAM/FLASH, External LCD, SD card).]
-)
-Il processore raggiunge gli *on-chip peripherals* attraverso la *bus matrix*; le *external interfaces* collegano dispositivi *off-chip* (External SRAM/FLASH, External LCD, SD card).
+=== Peripherals and Chip Architecture
 
-== How Do They Communicate?
-#keep[
-Ogni *peripheral* (device) espone dei *registers*. La CPU dialoga col dispositivo leggendo e scrivendo i *device registers*. Le interrupt lines (non mostrate nella figura) riportano eventi dai dispositivi I/O che richiedono servizio della CPU.
-]
+Other than the CPU, a chip integrates many peripherals (e.g., I/O devices): timers, UART, sensors.
 
-#figure(
-  grid(columns: (1fr, 0.55fr, 1.25fr), column-gutter: 2pt, align: center,
-    gb[CPU],
-    text(size: 6pt)[$arrow.l.r$],
-    grid(rows: (auto, auto), row-gutter: 3pt,
-      gb(fill: rgb("#DCE7EC"))[Status Register],
-      gb(fill: rgb("#F6D9C6"))[Data Register])),
-  caption: [CPU collegata ai registri Status e Data; i registri sono collegati al Device Mechanism.]
-)
-
-=== Device registers link software e hardware state
-I device registers collegano il software allo stato hardware.
-
-#defbox([Data registers],[
-  Carry values moving into or out of the device.
-  #list([hold data values], [access direction depends on the peripheral], [can be readable or writable])
+#figure(caption: [MCU architecture: Cortex-M4 core, on-chip memories, peripherals and external interfaces.], [
+  #raw("")
+  #scale(82%, reflow: true)[
+    #canvas({
+      cbox(0.4, 5.8, 4.0, 1.25, [])
+      draw.content((2.4, 6.85), text(size: 6pt, weight: "bold")[Cortex-M4])
+      cbox(0.6, 5.95, 2.1, 0.7, [PPB \ SCS, NVIC, Debug CRTL], fs: 4.5pt)
+      cbox(2.8, 5.95, 1.4, 0.7, [AHB/APB], fs: 5pt)
+      draw.line((0.3, 5.5), (9.7, 5.5), stroke: 1pt + rgb("#2E7D32"))
+      draw.content((5.0, 5.67), text(size: 5.5pt)[bus matrix])
+      cbox(0.4, 4.2, 2.7, 1.1, [On-chip FLASH \ (Code Region)])
+      cbox(3.3, 4.2, 2.7, 1.1, [On-chip SRAM \ (SRAM Region)])
+      cbox(6.2, 4.2, 2.8, 1.1, [Timer \ UART \ (Peripheral Region)])
+      cbox(0.4, 2.9, 4.5, 1.0, [External memory interface \ (External RAM Region)])
+      cbox(5.1, 2.9, 4.5, 1.0, [External device interface \ (External Device Region)])
+      draw.rect((0, 2.3), (10, 7.6), stroke: 0.8pt + rgb("#333333"))
+      draw.content((5.0, 7.42), text(size: 6.5pt, weight: "bold")[Chip Silicon])
+      cbox(0.4, 0.5, 2.6, 0.9, [External SRAM, \ FLASH])
+      cbox(3.2, 0.5, 2.2, 0.9, [External LCD])
+      cbox(5.6, 0.5, 2.0, 0.9, [SD card])
+      cbox(7.8, 0.5, 1.8, 0.9, [GPIO])
+      draw.line((1.5, 2.9), (1.7, 1.4), stroke: 0.5pt + rgb("#1B4965"), mark: (end: ">"))
+      draw.line((3.0, 2.9), (4.3, 1.4), stroke: 0.5pt + rgb("#1B4965"), mark: (end: ">"))
+      draw.line((7.0, 2.9), (6.6, 1.4), stroke: 0.5pt + rgb("#1B4965"), mark: (end: ">"))
+      draw.line((8.0, 2.9), (8.7, 1.4), stroke: 0.5pt + rgb("#1B4965"), mark: (end: ">"))
+    })
+  ]
 ])
 
-#defbox([Status and control registers],[
-  Report events and configure operating modes (e.g., event: the current operation has been completed).
-  #list([individual bits often have different meanings])
-])
+=== How Do They Communicate?
 
-=== Two architectural models for device access
-Due modi per accedere ai registri.
-- *I/O instructions*: istruzioni speciali per input/output; `in` e `out` nel caso dell'Intel x86; forniscono un *separate address space* per i dispositivi I/O (separate address lines…).
-- *Memory-mapped I/O*: fornisce indirizzi per i registri di ciascun dispositivo I/O; i programmi usano le normali istruzioni di memory read/write della CPU per comunicare coi dispositivi.
+- The processor reaches on-chip peripherals through the *bus matrix*; external interfaces connect off-chip devices.
+- Each peripheral (i.e., device) exposes registers; the CPU talks to the device by reading and writing device registers.
+- Interrupt lines (not shown in this figure) will report events from I/O devices that need CPU service.
 
-#cmp((1.1fr, 1.6fr, 1.7fr, 1.2fr),
-  [Model], [Addressing], [Instructions], [Typical example],
+#asciifig("
++------+   Status Register   +--------------+
+|      |====================>|              |
+| CPU  |   Data Register     |    Device    |
+|      |====================>|   Mechanism  |
++------+                     +--------------+
+", [Status and data registers between CPU and device.])
+
+Device registers connect software to hardware state:
+
+#cmp(2)[Data registers][#list(
+  [carry values moving into or out of the device;],
+  [hold data values;],
+  [access direction depends on the peripheral;],
+  [can be readable or writable.]
+)][Status and control registers][#list(
+  [report events and configure operating modes;],
+  [e.g., event: the current operation has been completed;],
+  [individual bits often have different meanings.]
+)]
+
+=== Two Architectural Models for Device Access
+
+Two ways to access those registers:
+
+- *I/O instructions*: special instructions for input and output (`in` and `out` in the case of the Intel x86); provide a separate address space for I/O devices (separate address lines…).
+- *Memory-mapped I/O*: provides addresses for the registers in each I/O device; programs use the CPU's normal memory read and write instructions to communicate with the devices.
+
+#tbl(4, head: ([Model], [Addressing], [Instructions], [Typical example]),
   [Separate I/O space], [Dedicated device address space], [Special input and output instructions], [Legacy x86 ports],
   [Memory-mapped I/O], [Device registers share the memory address space], [Normal load and store instructions], [Arm microcontrollers])
 
-== Device register access in ARM and C
-=== ARM loads and stores access device registers
-Definire la location del device e fornire il codice Read/Write:
+=== ARM Loads and Stores Access Device Registers
 
-```c
-DEV1_BASE EQU 0x40001000
-LDR r1, = DEV1_BASE
-LDR r0, [r1]        // read register
-MOVS r0, #8
-STR r0, [r1]        // write register
-```
+#raw(block: true, lang: "asm", "DEV1_BASE   EQU 0x40001000\nLDR r1, = DEV1_BASE\nLDR r0, [r1]        // read register\nMOVS r0, #8\nSTR r0, [r1]        // write register")
 
-#keypt([What matters],[
-  L'address deve identificare il registro corretto; access width e alignment devono corrispondere alla specifica del peripheral.
-  Un address errato può controllare un altro peripheral o causare un *bus fault*.
+#keypt("What matters", [
+  A wrong address can control a different peripheral or trigger a bus fault. The address must identify the correct register. The access width and alignment must match the peripheral specification.
 ])
 
-=== C requires volatile access to device registers
-Si possono usare i pointer per manipolare gli indirizzi dei dispositivi I/O.
+=== C Requires Volatile Access to Device Registers
 
-```c
-#include <stdint.h>
-#define DEV1_STATUS_ADDR 0x40001000u
-#define DEV1_STATUS(*(volatile uint32_t *)DEV1_STATUS_ADDR)
+We can use pointers to manipulate the addresses of I/O devices.
 
-uint32_t status = DEV1_STATUS;
-DEV1_STATUS = 8u;
-```
-`volatile` indica al compiler che ogni read e write conta, perché l'hardware può cambiare il valore fuori dal normale flusso del programma.
+#raw(block: true, lang: "c", "#include <stdint.h>\n#define DEV1_STATUS_ADDR 0x40001000u\n#define DEV1_STATUS (*(volatile uint32_t *)DEV1_STATUS_ADDR)\nuint32_t status = DEV1_STATUS;\nDEV1_STATUS = 8u;")
 
-Introducendo funzioni che leggono e scrivono memory locations:
+#defbox("volatile", [
+  Tells the compiler that every read and write matters because hardware may change the value outside normal program flow.
+])
 
-```c
-#define DEV1_STATUS_ADDR 0x40001000u
+Introduce functions that read and write memory locations:
 
-int read(uint8_t *location) {
-  return *location;
-}
+#raw(block: true, lang: "c", "#define DEV1_STATUS_ADDR 0x40001000u\nint read(uint8_t *location) {\n  return *location;\n}\nvoid write(uint8_t *location, char newval) {\n  (*location) = newval;\n}\nuint32_t status = read(DEV1_STATUS_ADDR); /* read device register */\nwrite(DEV1_STATUS_ADDR, 8); /* write 8 to device register */")
 
-void write(uint8_t *location, char newval) {
-  (*location) = newval;
-}
+=== Register Definitions Should Express Width and Intent
 
-uint32_t status = read(DEV1_STATUS_ADDR); /* read device register */
-write(DEV1_STATUS_ADDR,8); /* write 8 to device register */
-```
+The device reference manual defines the legal access pattern for each device register.
 
-=== Register definitions should express width and intent
-Il device reference manual definisce il legal access pattern per ogni device register.
-
-#tbl((1fr, 2.1fr), head: ([Concern], [Reason]),
+#tbl(2, head: ([Concern], [Reason]),
   [Access width], [A byte, halfword, or word transfer may have different hardware meaning],
   [Read-only and write-only behavior], [Some registers reject unsupported access directions],
   [Reserved bits], [Software should preserve or write required values],
   [Side effects], [A read may clear status and a write may acknowledge an event])
 
 == Polling (Busy-Wait) I/O
-- I dispositivi I/O sono tipicamente più lenti della CPU: possono richiedere molti cicli per completare un'operazione.
-- *Busy-wait* (spesso chiamato *polling*): chiedere a un dispositivo I/O se ha finito leggendo il suo *status register*; il software legge lo status register finché non appare la condizione *ready* o *complete*.
-- Il loop fornisce bassa complessità di control-flow, ma i cicli CPU vengono consumati mentre non progredisce lavoro utile.
 
-=== Polling an output device (Example)
-- Un carattere avvia ogni transazione.
-- Il loop interno attende il completamento.
+- I/O devices are typically slower than the CPU and may require many cycles to complete an operation.
+- *Busy-wait* (often called polling): asking an I/O device whether it is finished by reading its status register; software reads a status register until the ready or complete condition appears.
+- The loop provides low control-flow complexity; CPU cycles are consumed while no useful application work progresses.
 
-```c
-#define OUT_CHAR 0x1000 /* output device character register */
-#define OUT_STATUS 0x1001 /* output device status register */
+=== Polling an Output Device (Example)
 
-while (*current != '\0') {
-  OUT_DATA = *current;
-  OUT_STATUS = START;
+One character starts each transaction; the inner loop waits for completion.
 
-  while (OUT_STATUS != DONE) {
-    // CPU waits here
-  }
+#raw(block: true, lang: "c", "#define OUT_CHAR 0x1000 /* output device character register */\n#define OUT_STATUS 0x1001 /* output device status register */\nwhile (*current != '\\0') {\n  OUT_DATA = *current;\n  OUT_STATUS = START;\n  while (OUT_STATUS != DONE) {\n    // CPU waits here\n  }\n  current++;\n}")
 
-  current++;
-}
-```
-La CPU non può svolgere lavoro applicativo indipendente durante l'attesa.
+The CPU cannot perform independent application work during the wait.
 
-=== A polling-based input-to-output loop (Example)
-Ripetere per sempre:
-- attendere che l'input status riporti dati disponibili;
-- leggere un valore dal input data register;
-- scrivere quel valore nel output data register;
-- attendere che il output device completi la transazione.
+=== A Polling-Based Input-to-Output Loop (Example)
 
-```c
-for (;;) {
-  while (IN_STATUS == EMPTY) { }
-  uint8_t c = IN_DATA;
+Repeat forever:
 
-  while (OUT_STATUS == BUSY) { }
-  OUT_DATA = c;
-  OUT_STATUS = START;
-}
-```
-Il loop non permette al foreground work di continuare.
+- wait until the input status reports available data;
+- read one value from the input data register;
+- write that value into the output data register;
+- wait until the output device completes the transaction.
+
+#raw(block: true, lang: "c", "for (;;) {\n  while (IN_STATUS == EMPTY) { }\n  uint8_t c = IN_DATA;\n  while (OUT_STATUS == BUSY) { }\n  OUT_DATA = c;\n  OUT_STATUS = START;\n}")
+
+The loop does not allow the foreground work to continue.
 
 == Interrupt-driven I/O
-- Il busy-wait I/O è inefficiente: la CPU potrebbe fare lavoro utile in parallelo all'I/O.
-- Il meccanismo degli interrupt permette a un dispositivo di richiedere servizio solo quando si verifica un evento.
-- Il processore salva il context, esegue un handler, poi riprende il programma interrotto.
 
-=== Several signals control the interrupt process
-- Il dispositivo asserisce un *interrupt request*: la logica del dispositivo I/O decide quando interrompere (e.g., quando i dati sono pronti).
-- La CPU accetta la richiesta: asserisce il segnale *interrupt acknowledge* e cambia il program counter in modo che punti all'*interrupt handler* del dispositivo.
-- L'*interrupt handler* identifica la sorgente dell'evento (e.g., quale dispositivo) e compie le azioni di processing necessarie.
+- Busy-wait I/O is inefficient; the CPU could do useful work in parallel with the I/O.
+- The interrupt mechanism allows a device to request service only when an event occurs.
+- The processor saves context, runs a handler, then resumes the interrupted program.
 
-#figure(
-  grid(columns: (1fr, 1.15fr, 1.25fr), column-gutter: 3pt, align: center,
-    gb[CPU],
-    block(text(size: 5.5pt)[
-      #text(fill: accent)[Interrupt Request] $arrow.r$ \
-      #v(1pt) $arrow.l$ Interrupt Acknowledge \
-      #v(1pt) Data/Address $arrow.r$
-    ]),
-    block(width: 100%, stroke: 0.5pt + ink, inset: 3pt, radius: 1.5pt,
-      grid(columns: (1fr, 1.1fr), column-gutter: 2pt, align: center,
-        grid(rows: (auto, auto), row-gutter: 3pt, gb(fill: rgb("#DCE7EC"))[Status Register], gb(fill: rgb("#F6D9C6"))[Data Register]),
-        gb(fill: rgb("#E2E6E8"))[Device Mechanism]))),
-  caption: [Interrupt request, interrupt acknowledge e data/address tra CPU e dispositivo.]
-)
+=== Several Signals Control the Interrupt Process
 
-=== Interrupt entry changes control flow
-Quando avviene un interrupt:
-- per prima cosa viene salvato il valore del PC al momento dell'interruzione, così la CPU può tornare al foreground program;
-- poi il PC punta a una interrupt handler routine, che serve il dispositivo leggendo i dati appena pronti, scrivendo i successivi dati…
+- The device asserts an *interrupt request*; the I/O device's logic decides when to interrupt (e.g., when data is ready, the user pressed a button).
+- The CPU accepts the request: it asserts the *interrupt acknowledge* signal and changes the program counter to point to the device's interrupt handler.
+- The interrupt handler identifies the event source (e.g., which device) and takes the necessary processing actions.
 
-#tbl((1fr, 2.1fr), head: ([Phase], [Processor action]),
+#asciifig("
++------+   Interrupt Request  +--------------+
+|      |<---------------------|              |
+| CPU  |   Interrupt Ack      |    Device    |
+|      |--------------------->|   Mechanism  |
+|      |   Data/Address       |              |
+|      |<====================>|              |
++------+                      +--------------+
+", [Signals between CPU and device: request, acknowledge, data/address.])
+
+=== Interrupt Entry Changes Control Flow
+
+When an interrupt occurs:
+
+- first, the value of the PC at the interruption is saved: the CPU can return to the foreground program later;
+- then, the PC starts pointing to an interrupt handler routine: this routine takes care of the device by reading data that have just become ready, writing the next data…
+
+#tbl(2, head: ([Phase], [Processor action]),
   [Recognition], [Detect interrupt],
   [Context save], [Preserve the return state and selected registers],
   [Vector fetch], [Load the handler address from the vector table],
   [Service], [Execute the interrupt handler],
   [Return], [Restore state and resume the interrupted code])
 
-=== Cortex-M interrupt entry
-- Salva il context necessario: pushes dei registri importanti R0–R3, R12, LR, PC e xPSR nello stack.
-- Trova l'handler address dall'interrupt vector table; l'handler può salvare registri aggiuntivi che usa.
-- L'interrupt return ripristina lo stato e il context salvati dall'hardware.
-- Il codice interrupt in C è processato dal compiler in modo specifico: gli handler generati dal compiler seguono l'architecture calling convention quando dichiarati correttamente.
+=== Cortex-M Interrupt Entry
 
-=== A minimal input interrupt handler in C
-- Legge il dato che ha causato l'interrupt.
-- Registra lo stato minimo per il processing successivo.
-- Acknowledge o clear dell'evento del dispositivo.
-- Ritorna rapidamente.
+- Save the necessary context: pushes important registers R0 to R3, R12, LR, PC, and xPSR into stack.
+- Finds the handler address from the interrupt vector table.
+- The handler may save additional registers that it uses.
+- Interrupt return restores the hardware-saved state and context.
+- Interrupt code in C is processed in a specific way by the compiler: compiler-generated handlers follow the architecture calling convention when declared correctly.
 
-```c
-volatile uint8_t latest_char;
-volatile bool char_ready;
+=== A Minimal Input Interrupt Handler in C
 
-void input_handler(void) {
-  latest_char = IN_DATA; // read device register
-  char_ready = true;
-  IN_STATUS = ACK; // acknowledge the device
-}
-```
+- Read the data that caused the interrupt.
+- Record minimal state for later processing.
+- Acknowledge or clear the device event.
+- Return quickly.
 
-=== Interrupts example
-Copiare caratteri da input a output con interrupt di base:
-- `achar`: passa il carattere al foreground program;
-- `gotchar`: segnala quando è stato ricevuto un nuovo carattere.
+#raw(block: true, lang: "c", "volatile uint8_t latest_char;\nvolatile bool char_ready;\nvoid input_handler(void) {\n  latest_char = IN_DATA; // read device register\n  char_ready = true;\n  IN_STATUS = ACK; // acknowledge the device\n}")
 
-```c
-/* INTERRUPT HANDLERS */
-/* get a character and put in global (called when IN_STATUS is 1) */
-void input_handler() {
-  achar = read(IN_DATA); /* get character */
-  gotchar = TRUE;        /* signal to main program */
-  write(IN_STATUS,0);    /* reset status to initiate next transfer */
-}
+=== Interrupts (Example)
 
-/* react to character being sent (called when OUT_STATUS is 0) */
-void output_handler() {
-  /* don't have to do anything */
-}
-```
+`achar` passes the character to the foreground program; `gotchar` signals when a new character has been received.
 
-Il main program è un po' più semplice rispetto al Busy Wait I/O, ma ancora non permette al foreground program di fare lavoro utile: esegue polling di input e scrive dati.
+#raw(block: true, lang: "c", "/* get a character and put in global (called when IN_STATUS is 1) */\nvoid input_handler() {\n  achar = read(IN_DATA); /* get character */\n  gotchar = TRUE; /* signal to main program */\n  write(IN_STATUS, 0); /* reset status to initiate next transfer */\n}\n/* react to character being sent (called when OUT_STATUS is 0) */\nvoid output_handler() {\n  /* don't have to do anything */\n}")
 
-```c
-main() {
-  while (TRUE) { /* read then write forever */
-    if (gotchar){ /* write a character */
-      write(OUT_DATA,achar); /* put character in device */
-      write(OUT_STATUS,1);   /* set status to initiate write */
-      gotchar = FALSE;       /* reset flag */
-    }
-  }
-}
-```
+The main program is somewhat simpler compared to Busy Wait I/O, but still does not let the foreground program do useful work: it polls input and writes data.
 
-== A circular buffer separates producer and consumer timing
-- Un indice identifica la next read position.
-- L'altro identifica la next write position.
+#raw(block: true, lang: "c", "main() {\n  while (TRUE) { /* read then write forever */\n    if (gotchar) { /* write a character */\n      write(OUT_DATA, achar); /* put character in device */\n      write(OUT_STATUS, 1); /* set status to initiate write */\n      gotchar = FALSE; /* reset flag */\n    }\n  }\n}")
 
-#figure(
-  block(stroke: 0.5pt + rule, inset: 5pt, width: 100%, {
-    grid(columns: range(8).map(_ => 1fr), column-gutter: 0pt, row-gutter: 0pt,
-      ..([], [a], [b], [c], [d], [e], [f], [g]).map(v => cellbox(v)))
-    v(2pt)
-    grid(columns: range(8).map(_ => 1fr),
-      align(center, text(size: 5.5pt, fill: accent)[head]),
-      align(center, text(size: 5.5pt, fill: accent)[tail]),
-      ..range(6).map(_ => []))
-  }),
-  caption: [Buffer circolare a 8 celle; un indice per la next read position, l'altro per la next write position.]
-)
+== Circular Buffer
 
-=== Buffer implementation
-```c
-#define BUF_SIZE 8
-char io_buf[BUF_SIZE];          /* character buffer */
-int buf_head = 0, buf_tail = 0; /* current position in buffer */
-int error = 0;                  /* set to 1 if buffer ever overflows */
+=== A Circular Buffer Separates Producer and Consumer Timing
 
-int buffer_empty() { /* returns TRUE if buffer is empty */
-  return buf_head == buf_tail;
-}
+- One index identifies the next read position.
+- The other identifies the next write position.
 
-int buffer_full() { /* returns TRUE if buffer is full */
-  return (buf_tail+1) % BUF_SIZE == buf_head ;
-}
+#asciifig("
++--+--+--+--+--+--+--+--+
+|  |  |  |  |  |  |  |  |
++--+--+--+--+--+--+--+--+
+  ^  ^
+ head tail
+", [Empty circular buffer: head and tail coincide.])
 
-int nchars() { /* returns the number of characters in the buffer */
-  if (buf_head >= buf_tail)
-    return buf_head - buf_tail;
-  else
-    return BUF_SIZE - buf_tail - buf_head;
-}
-```
+#asciifig("
++--+--+--+--+--+--+--+--+
+|  | b| c| d| e| f| g| h|
++--+--+--+--+--+--+--+--+
+  ^  ^
+ tail head
+", [Circular buffer holding data b–h.])
 
-```c
-void buffer_put(char achar) { /* add a character to the buffer head */
-  io_buf[buf_tail++] = achar;
-  /* check pointer */
-  if (buf_tail == BUF_SIZE)
-    buf_tail = 0;
-}
+=== Circular Buffer Implementation
 
-char buffer_get() { /* take a character from the buffer head */
-  char achar;
-  achar = io_buf[buf_head++];
-  /* check pointer */
-  if (buf_head == BUF_SIZE)
-    buf_head = 0;
+#raw(block: true, lang: "c", "#define BUF_SIZE 8\nchar io_buf[BUF_SIZE]; /* character buffer */\nint buf_head = 0, buf_tail = 0; /* current position in buffer */\nint error = 0; /* set to 1 if buffer ever overflows */\n\nint buffer_empty() { /* returns TRUE if buffer is empty */\n  return buf_head == buf_tail;\n}\nint buffer_full() { /* returns TRUE if buffer is full */\n  return (buf_tail+1) % BUF_SIZE == buf_head ;\n}\nint nchars() { /* returns the number of characters in the buffer */\n  if (buf_head >= buf_tail)\n    return buf_head - buf_tail;\n  else\n    return BUF_SIZE - buf_tail - buf_head;\n}")
 
-  return achar;
-}
-```
+#raw(block: true, lang: "c", "void buffer_put(char achar) { /* add a character to the buffer head */\n  io_buf[buf_tail++] = achar;\n  /* check pointer */\n  if (buf_tail == BUF_SIZE)\n    buf_tail = 0;\n}\nchar buffer_get() { /* take a character from the buffer head */\n  char achar;\n  achar = io_buf[buf_head++];\n  /* check pointer */\n  if (buf_head == BUF_SIZE)\n    buf_head = 0;\n  return achar;\n}")
 
-== Interrupts example with circular buffer
-=== Input ISR adds data and starts output
-- Cattura l'elemento in arrivo.
-- Registra l'overflow senza bloccarsi.
-- Avvia l'output solo quando la coda era idle.
-- Acknowledge dell'evento di input.
+=== Input ISR Adds Data and Starts Output
 
-```c
-void input_handler(void) {
-  uint8_t c = IN_DATA;
+The input ISR adds data and starts output:
 
-  if (buffer_full()) {
-    overflow = true;
-  } else {
-    bool was_empty = buffer_empty();
-    buffer_put(c);
-    if (was_empty) start_output();
-  }
+- capture the arriving item;
+- record overflow without blocking;
+- kick the output only when the queue was idle;
+- acknowledge the input event.
 
-  IN_STATUS = ACK;
-}
-```
+#raw(block: true, lang: "c", "void input_handler(void) {\n  uint8_t c = IN_DATA;\n  if (buffer_full()) {\n    overflow = true;\n  } else {\n    bool was_empty = buffer_empty();\n    buffer_put(c);\n    if (was_empty) start_output();\n  }\n  IN_STATUS = ACK;\n}")
 
-=== Output ISR launches the next queued item
-- Ogni completion interrupt lancia il prossimo elemento in coda.
-- L'handler disabilita gli interrupt non necessari quando non restano dati.
+Each completion interrupt launches the next queued item; the handler disables unnecessary interrupts when no data remains.
 
-```c
-void output_handler(void) {
-  OUT_STATUS = ACK;
-  if (!buffer_empty()) {
-    OUT_DATA = buffer_get();
-    OUT_CONTROL = START;
-  } else {
-    stop_output();
-  }
-}
-```
+#raw(block: true, lang: "c", "void output_handler(void) {\n  OUT_STATUS = ACK;\n  if (!buffer_empty()) {\n    OUT_DATA = buffer_get();\n    OUT_CONTROL = START;\n  } else {\n    stop_output();\n  }\n}")
 
-=== Foreground vs interrupt
-Il foreground program viene occasionalmente interrotto da operazioni di input e output, gestite dagli interrupt handler in background; il foreground program riprende dopo gli handler.
+=== Foreground/ISR Timing
 
-```text
-main() --Input ISR--> main() --Output ISR--> main() --Input ISR--> main()
-        (background)          (background)           (background)   --> Time
-```
+The foreground program is occasionally interrupted by input and output operations, handled by the interrupt handlers in the background; the foreground program resumes after interrupt handlers.
+
+#asciifig("
+Foreground Program
++------+     +------+     +------+
+| main |.....| main |.....| main |
++------+     +------+     +------+
+   Input ISR    Output ISR   Input ISR   Time ->
+", [Periodic interruptions of the foreground by the ISRs.])
+
+#raw(block: true, lang: "c", "void main(){\n  ...\n  for (i = 0; i < M; i++) {\n    y[i] = b[i];\n    for (j = 0; j < N; j++)\n      y[i] = y[i] + A[i,j]*x[ j];\n  }\n  ...\n}")
 
 == Bugs
-- Gli errori possono essere molto difficili da trovare quando gli interrupt handler hanno bug, a causa della concurrency.
-- L'interrupt handler deve salvare ogni registro CPU che modificherà e ripristinarli prima di uscire.
-- Dimenticare di salvare/ripristinare un registro nell'handler può far cambiare misteriosamente una variabile del foreground program.
 
-=== Read-modify-write race
-Esempio: impostare bit[3] nel word data all'address `0x20000000`.
+The errors can be very hard to find when the interrupt handlers are buggy due to the concurrency.
 
-```text
-;Read-Modify-Write Operation
-LDR R1, =0x20000000 ;Setup address     LDR R1, =0x20000000 ;Setup address
-LDR R0, [R1]        ;Read 0x21         LDR R0, [R1]        ;Read 0x21
-...                    Interrupt!      ORR.W R0, #0x8      ;Set bit[3]
-LDR R1, =0x20000000 ;Setup address     STR R0, [R1]        ;Write back 0x29
-STR R2,[R1]         ;Write back 0x79   ...
-...                    Return!
-```
+=== Saving Registers
 
-#defbox([Read-modify-write operation],[
-  #list(
-    [Legge il dato (`0x21`) dall'address `0x20000000`.],
-    [L'interrupt cambia il dato dell'address `0x20000000` e riscrive il vecchio dato modificato.],
-    [`0x79` è andato perso!]
-  )
-])
+An interrupt handler:
 
-```text
-Main program:  Read data --> Modify bit[3] ----------------> Write data back
-                                      Interrupt occurs
-ISR:                          Read data -> Modify bit[3] -> Write data back
-                              (Interrupt Service Routine)
-Bit[3] modificato dall'ISR viene sovrascritto dal main program.
-```
+- must save any CPU register that it will modify;
+- must restore them before it exits.
 
-== Interrupt handlers should do bounded work
-- Catturare o consegnare il minimo dato richiesto dal dispositivo.
-- Clear della sorgente di interrupt prima che possa riattivarsi inaspettatamente.
-- Evitare blocking calls e loop non limitati.
-- Spostare il processing costoso nel foreground o in deferred work.
-- Misurare il worst-case execution time.
+Forgetting to save/restore a register in the handler might cause that register to mysteriously change a variable in the foreground program.
 
-== Interrupts - Implementaton
-- La CPU controlla la *interrupt request (IRQ)* line a ogni istruzione.
-- Se una interrupt request è stata asserita, la CPU:
-  - mette il return address su uno stack (come fa per le subroutine);
-  - non fetcha l'istruzione puntata dal PC, ma setta il PC all'inizio dell'*interrupt handler*.
-- Gli address degli interrupt handler sono memorizzati in una tabella.
+=== Read-Modify-Write
+
+For example, in order to set bit[3] in word data in address `0x20000000`:
+
+#raw(block: true, lang: "asm", "...\nLDR R1, =0x20000000   ;Setup address\nSTR R2,[R1]           ;Write back 0x79\n...\n\n;Read-Modify-Write Operation\nLDR R1, =0x20000000   ;Setup address\nLDR R0, [R1]          ;Read 0x21\nORR.W R0, #0x8        ;Set bit[3]\nSTR R0, [R1]          ;Write back 0x29")
+
+#asciifig("
+Main: Read 0x21 -> Modify bit[3] ------------> Write 0x29
+                        |
+                  Interrupt occurs
+                        v
+ISR:  Read 0x21 -> Modify bit[3] -> Write 0x29
+                        |
+                  Interrupt returns
+Bit[3] modified by ISR is overwritten by main
+", [Interrupted read-modify-write: the main program's write overwrites the ISR's.])
+
+Read-modify-write operation:
+
+- reads the data (0x21) from the address `0x20000000`;
+- the interrupt changes the data of `0x20000000` address;
+- writes back the modified old data back;
+- `0x79` has been lost!
+
+Bit[3] modified by ISR is overwritten by the main program.
+
+== Interrupt Handlers Should Do Bounded Work
+
+- Capture or deliver the minimum data required by the device.
+- Clear the interrupt source before it can retrigger unexpectedly.
+- Avoid blocking calls and unbounded loops.
+- Move expensive processing into foreground or deferred work.
+- Measure worst-case execution time.
+
+== Interrupts — Implementation
+
+- The CPU checks the interrupt request (IRQ) line at every instruction.
+- If an interrupt request has been asserted, the CPU:
+  - puts the return address on a stack (as CPU does for subroutines);
+  - does not fetch the instruction pointed to by the PC;
+  - sets the PC to the beginning of the interrupt handler.
+- The address of the interrupt handlers are stored in a table.
 
 == Priorities and Vectors
-- La maggior parte dei sistemi ha più di un dispositivo I/O: più dispositivi possono interrompere; più interrupt handler, device address.
-- *Interrupt priorities*: riconoscere alcuni interrupt come più importanti di altri.
-- *Interrupt vectors*: permettere al dispositivo che interrompe di specificare il proprio interrupt handler.
 
-=== Programmable interrupt controller (PIC)
-- Il *Programmable interrupt controller* (PIC) prioritizza più sorgenti di interrupt in modo che, in ogni momento, l'interrupt a priorità più alta sia presentato alla core CPU per il processing.
-- Cortex-M integra questa funzione nell'*NVIC*.
+- Most systems have more than one I/O device: multiple devices can interrupt, several interrupt handlers and device addresses.
+- *Interrupt priorities*: recognize some interrupts as more important than others.
+- *Interrupt vectors*: allow the interrupting device to specify its interrupt handler.
 
-#asciifig("Airbag Sensor HIGHEST \\\nBreak Sensor  HIGH     \\\nReal Time Clk MED       > PIC --> CPU\nFuel Level    LOW      /        (Interrupt Vector)",
-  [Sorgenti di interrupt con priorità HIGHEST/HIGH/MED/LOW verso il PIC, poi verso la CPU; il PIC fornisce l'Interrupt Vector.])
-
-=== Priority logic and nested interrupts
-- La *priority logic* seleziona la highest eligible request; il PIC memorizza il priority level di quell'interrupt in un registro interno.
-- Quando sopraggiunge un interrupt successivo, la priorità è confrontata con la priorità corrente.
-- *Nested interrupts*: una sorgente a priorità più alta può preemptare il processing di un interrupt a priorità più bassa.
-
-=== Pending bits, masking, NMI
-- I *pending bits* registrano gli interrupt in attesa di servizio.
-- *Masking interrupts*: gli enable bits determinano quali sorgenti possono interrompere.
-- L'interrupt a priorità più alta è chiamato *nonmaskable interrupt (NMI)*.
-- L'NMI non può essere disattivato: e.g., di solito riservato a interrupt causati da power failures, per salvare critical state in memoria non volatile, spegnere dispositivi I/O…
-
-== Interrupt Vector Table
-- Ogni interrupt ha un *vector number*, che indicizza la vector table.
-- La entry selezionata contiene l'*interrupt vector*, cioè il memory address dell'interrupt handler.
-
-#tbl((1.4fr, 1fr), head: ([Interrupt Vector Table], []),
-  [Handler 1], [Vector 0],
-  [Handler 3], [Vector 1],
-  [Handler 4], [Vector 2],
-  [Handler 2], [Vector 3])
-
-== Overhead of Interrupts
-Un interrupt causa un cambiamento del program counter (incorre in un branch penalty):
-- l'interrupt può salvare automaticamente alcuni registri CPU, richiedendo cicli extra;
-- acknowledge dell'interrupt e ottenimento dell'interrupt vector richiedono cicli extra;
-- l'overhead dell'interrupt handler: salva e ripristina i registri CPU non salvati automaticamente; la interrupt return instruction ripristina lo stato salvato automaticamente e incorre in un branch penalty.
-
-#defbox([Interrupt Response Time],[
-  Il tempo richiesto dall'hardware per rispondere all'interrupt, ottenere il vector, salvare lo stato e così via, *non può essere cambiato dal programmatore*.
+#figure(caption: [Source priorities: the PIC selects the highest-priority request and presents the vector to the CPU.], [
+  #raw("")
+  #scale(78%, reflow: true)[
+    #canvas({
+      cbox(0, 4.4, 1.7, 0.9, [Airbag \ Sensor])
+      cbox(0, 3.2, 1.7, 0.9, [Break \ Sensor])
+      cbox(0, 2.0, 1.7, 0.9, [Real \ Time \ Clock])
+      cbox(0, 0.8, 1.7, 0.9, [Fuel \ Level \ Sensor])
+      draw.content((2.6, 4.85), text(size: 5.5pt)[HIGHEST])
+      draw.content((2.2, 3.65), text(size: 5.5pt)[HIGH])
+      draw.content((1.9, 2.45), text(size: 5.5pt)[MED])
+      draw.content((1.9, 1.25), text(size: 5.5pt)[LOW])
+      cbox(4.2, 1.4, 1.8, 3.6, [PIC])
+      draw.line((1.7, 4.85), (4.2, 4.5), stroke: 0.7pt + rgb("#E07A00"), mark: (end: ">"))
+      draw.line((1.7, 3.65), (4.2, 3.5), stroke: 0.7pt + rgb("#E07A00"), mark: (end: ">"))
+      draw.line((1.7, 2.45), (4.2, 2.5), stroke: 0.7pt + rgb("#E07A00"), mark: (end: ">"))
+      draw.line((1.7, 1.25), (4.2, 1.7), stroke: 0.7pt + rgb("#E07A00"), mark: (end: ">"))
+      cbox(7.2, 2.6, 1.6, 1.2, [CPU])
+      draw.line((6.0, 3.2), (7.2, 3.2), stroke: 0.7pt + rgb("#E07A00"), mark: (end: ">"))
+      draw.content((6.6, 3.55), text(size: 5pt)[Interrupt])
+      draw.content((6.6, 2.95), text(size: 5pt)[Vector])
+      cbox(9.3, 2.8, 1.3, 0.8, [Interrupt \ Vector], fs: 5pt)
+      draw.line((8.8, 3.2), (9.3, 3.2), stroke: 0.7pt + rgb("#E07A00"), mark: (end: ">"))
+    })
+  ]
 ])
 
-```text
-        Interrupt Latency   Processing Time
-        |<-------------->|<--------------->|
-... ____|                 |                |____ ...
-               Interrupt Response Time
-|<---------- Time Between Interrupts ---------->|
-```
+=== Programmable Interrupt Controller (PIC)
+
+The PIC prioritizes multiple interrupt sources so that at any time the highest priority interrupt is presented to the core CPU for processing. Cortex-M integrates this function in the NVIC.
+
+=== Nested Interrupts
+
+- Priority logic selects the highest eligible request.
+- The PIC stores the priority level of that interrupt in an internal register.
+- When a subsequent interrupt occurs, the priority is checked against current priority.
+- *Nested interrupts*: a higher priority interrupt source can preempt the processing of a lower priority interrupt.
+
+=== Pending Bits and Masking
+
+- *Pending bits* record interrupts awaiting service.
+- *Masking*: enable bits determine which sources may interrupt.
+- The highest-priority interrupt is called the *nonmaskable interrupt* (NMI); the NMI cannot be turned off.
+- E.g., usually reserved for interrupts caused by power failures to save critical state in nonvolatile memory, turn off I/O devices…
+
+=== Interrupt Vector Table
+
+- Each interrupt has a *vector number*.
+- The vector number indexes the vector table.
+- The selected entry holds the *interrupt vector*: i.e., the memory address of the interrupt handler.
+
+#raw(block: true, lang: "c", "void handler1() {\n  ...\n}")
+
+#tbl(2, head: ([Vector], [Handler]),
+  [Vector 0], [Handler 1],
+  [Vector 1], [Handler 3],
+  [Vector 2], [Handler 4],
+  [Vector 3], [Handler 2])
+
+== Overhead of Interrupts
+
+- An interrupt causes a change in the program counter: incurs a branch penalty.
+- Interrupt might automatically store some CPU registers: requires extra cycles.
+- Acknowledge the interrupt and obtain the interrupt vector: requires extra cycles.
+- The interrupt handler overhead: saves and restores CPU registers that were not automatically saved; the interrupt return instruction restores the automatically saved state, incurs a branch penalty.
+
+=== Interrupt Response Time
+
+The time required for the hardware to respond to the interrupt, obtain the vector, save state and so on cannot be changed by the programmer.
+
+#asciifig("
+Interrupt        Interrupt
+  |                |
+  v                v
+--+----------------+------------------> Time
+  |<-Response Time->|
+  |<-Latency->|<Processing Time>|
+", [Interrupt latency, response time and processing time.])
+
+#keypt("Time between interrupts", [
+  Interval between successive interrupts, relative to latency, response time and processing time.
+])
