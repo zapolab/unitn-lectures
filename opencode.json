@@ -7,17 +7,8 @@
       },
       "models": {
         "deepseek/deepseek-v4.1-flash": {
-          // "options": {
-          //   "textVerbosity": "low"
-          // },
-          "variants": {
-            "fast": {
-              "reasoningEffort": "low",
-              "textVerbosity": "low"
-            },
-            "safe": {
-              "textVerbosity": "low"
-            }
+          "options": {
+            "reasoningEffort": "low"
           }
         }
       }
