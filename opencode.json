@@ -16,15 +16,13 @@
   },
   "permission": {
     "read": {
-      "*": "deny",
-      "/workspace/**": "allow",
+      "*": "allow",
       "*.env": "deny",
       "*.env.*": "deny",
       "*.env.example": "allow"
     },
     "edit": {
-      "*": "deny",
-      "/workspace/**": "allow"
+      "*": "allow"
     },
     "external_directory": "deny"
   },
